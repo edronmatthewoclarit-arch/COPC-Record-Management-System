@@ -48,3 +48,22 @@ pool.query('SELECT NOW()', (err, res) => {
     console.log('Database connected successfully at:', res.rows[0].now);
   }
 });
+/**
+ * @swagger
+ * /api/records:
+ *   get:
+ *     summary: Retrieve all records from the database
+ *     description: Fetches all rows from your PostgreSQL table
+ *     responses:
+ *       200:
+ *         description: A list of records retrieved successfully
+ */
+app.get('/api/records', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM copc_schema.documents'); // Match your table name here
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});

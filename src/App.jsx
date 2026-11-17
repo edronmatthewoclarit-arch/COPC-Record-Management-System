@@ -1,270 +1,724 @@
 import "./App.css";
-import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from "react";
-const initialNotices = [];
-const requirements = [];
-const nav = [
-    { id: "dashboard", label: "Dashboard", icon: "home" },
-    { id: "requirements", label: "Requirements", icon: "checklist" },
-    { id: "documents", label: "Documents", icon: "file" },
-    { id: "settings", label: "Settings", icon: "settings" },
-];
-function UiIcon({ name }) {
-    const paths = {
-        home: _jsxs(_Fragment, { children: [_jsx("path", { d: "M3 10.5 12 3l9 7.5" }), _jsx("path", { d: "M5 9.5V21h14V9.5M9 21v-7h6v7" })] }),
-        checklist: _jsxs(_Fragment, { children: [_jsx("rect", { x: "4", y: "3", width: "16", height: "18", rx: "2" }), _jsx("path", { d: "m8 9 1.5 1.5L12 8M14 9h3M8 15l1.5 1.5L12 14M14 15h3" })] }),
-        file: _jsxs(_Fragment, { children: [_jsx("path", { d: "M6 2h8l5 5v15H6z" }), _jsx("path", { d: "M14 2v6h6M9 13h6M9 17h6" })] }),
-        send: _jsx(_Fragment, { children: _jsx("path", { d: "m3 11 18-8-8 18-2-8zM11 13l4-4" }) }),
-        chart: _jsx(_Fragment, { children: _jsx("path", { d: "M4 20V10M10 20V4M16 20v-7M22 20H2" }) }),
-        settings: _jsxs(_Fragment, { children: [_jsx("circle", { cx: "12", cy: "12", r: "3" }), _jsx("path", { d: "M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" })] }),
-        clock: _jsxs(_Fragment, { children: [_jsx("circle", { cx: "12", cy: "12", r: "9" }), _jsx("path", { d: "M12 7v5l3 2" })] }),
-        upload: _jsxs(_Fragment, { children: [_jsx("path", { d: "M12 16V4m0 0L8 8m4-4 4 4" }), _jsx("path", { d: "M5 14v6h14v-6" })] }),
-        revision: _jsxs(_Fragment, { children: [_jsx("path", { d: "M9 7H4v-5" }), _jsx("path", { d: "M4 7a9 9 0 1 1-1 8" })] }),
-        check: _jsxs(_Fragment, { children: [_jsx("circle", { cx: "12", cy: "12", r: "9" }), _jsx("path", { d: "m8 12 2.5 2.5L16 9" })] }),
-        users: _jsxs(_Fragment, { children: [_jsx("circle", { cx: "9", cy: "8", r: "3" }), _jsx("path", { d: "M3 20v-2a6 6 0 0 1 12 0v2M16 7a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 4.6V20" })] }),
-        bell: _jsx(_Fragment, { children: _jsx("path", { d: "M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" }) }),
-        logout: _jsxs(_Fragment, { children: [_jsx("path", { d: "M10 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h5" }), _jsx("path", { d: "M14 8l4 4-4 4M18 12H8" })] }),
-        filter: _jsx(_Fragment, { children: _jsx("path", { d: "M3 5h18l-7 8v6l-4 2v-8z" }) }),
-        view: _jsxs(_Fragment, { children: [_jsx("path", { d: "M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" }), _jsx("circle", { cx: "12", cy: "12", r: "2.5" })] }),
-        search: _jsxs(_Fragment, { children: [_jsx("circle", { cx: "11", cy: "11", r: "7" }), _jsx("path", { d: "m20 20-4-4" })] }),
-        academic: _jsxs(_Fragment, { children: [_jsx("path", { d: "m2 9 10-5 10 5-10 5z" }), _jsx("path", { d: "M6 11.5V16c3 2.5 9 2.5 12 0v-4.5M22 9v6" })] }),
-        download: _jsxs(_Fragment, { children: [_jsx("path", { d: "M12 3v12m0 0 4-4m-4 4-4-4" }), _jsx("path", { d: "M4 17v3h16v-3" })] }),
-    };
-    return _jsx("svg", { className: "ui-icon", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round", children: paths[name] || paths.file });
-}
-// BRAND ASSET: place the official seal at public/assets/branding/msu-naawan-seal.svg.
-function Seal({ dark = false }) {
-    return _jsxs("div", { className: `seal ${dark ? "seal-dark" : ""}`, "aria-label": "Mindanao State University at Naawan", children: [_jsx("span", { children: "MSU" }), _jsx("small", { children: "NAAWAN" })] });
-}
-function Badge({ status }) {
-    return _jsx("span", { className: `badge ${status.toLowerCase().replace(" ", "-")}`, children: status });
-}
-function Modal({ title, children, onClose, action, actionLabel }) {
-    const isLogout = title === "Log Out?";
-    const isRequest = title === "Send Document Request";
-    return _jsx("div", { className: "modal-backdrop", onMouseDown: onClose, children: _jsxs("div", { className: `modal ${isLogout ? "logout-modal" : isRequest ? "request-modal" : title === "Send Document Request?" ? "request-confirm-modal" : ""}`, onMouseDown: e => e.stopPropagation(), children: [_jsxs("div", { className: "modal-head", children: [isLogout ? _jsxs("div", { className: "logout-modal-title", children: [_jsx("i", { children: _jsx(UiIcon, { name: "logout" }) }), _jsxs("div", { children: [_jsx("h2", { children: title }), _jsx("span", { children: "End your current session" })] })] }) : isRequest ? _jsxs("div", { className: "request-modal-title", children: [_jsx("i", { children: _jsx(UiIcon, { name: "send" }) }), _jsxs("div", { children: [_jsx("span", { className: "eyebrow", children: "Confirmation required" }), _jsx("h2", { children: title }), _jsx("small", { children: "Request the appropriate personnel to submit this requirement." })] })] }) : _jsxs("div", { children: [_jsx("span", { className: "eyebrow", children: "Confirmation required" }), _jsx("h2", { children: title })] }), _jsx("button", { className: "icon-btn", onClick: onClose, children: "\u00D7" })] }), _jsx("div", { className: "modal-body", children: children }), _jsxs("div", { className: "modal-actions", children: [_jsx("button", { className: "btn secondary", onClick: onClose, children: "Cancel" }), _jsxs("button", { className: `btn ${isLogout ? "logout-confirm" : "primary"}`, onClick: action, children: [isLogout ? _jsx(UiIcon, { name: "logout" }) : isRequest ? _jsx(UiIcon, { name: "send" }) : null, actionLabel] })] })] }) });
-}
-function Login({ onLogin }) {
-    const roles = ["COPC Coordinator", "Program Head", "Dean", "Office Representative", "Faculty"];
-    const [role, setRole] = useState("COPC Coordinator");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState("");
-    function submit(event) {
-        event.preventDefault();
-        const normalizedEmail = email.trim().toLowerCase();
-        if (!normalizedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-            setError("Enter a valid email address.");
-            return;
-        }
-        if (password.length < 8) {
-            setError("Password must contain at least 8 characters.");
-            return;
-        }
-        // Connect this form to POST /api/auth/login. The server must return the authenticated user and role.
-        // The production API must verify credentials and return the user's role.
-        onLogin(role);
+import { initialNotices } from "./api/CopcViewAPI/document.api";
+import { categoryOptions, initialRequirements } from "./api/CopcViewAPI/requirement.api";
+import Header from "./components/layout/Header";
+import Sidebar from "./components/layout/Sidebar";
+import Modal from "./components/ui/Modal";
+import UiIcon from "./components/ui/UiIcon";
+import { useAuth } from "./context/AuthContext";
+import CoordinatorDashboard from "./pages/CoordinatorDashboard";
+import DocumentDetails from "./pages/DocumentDetails";
+import Documents from "./pages/Documents";
+import Login from "./pages/Login";
+import NotificationsPage from "./pages/NotificationsPage";
+import Reports from "./pages/Reports";
+import Representatives from "./pages/Representatives";
+import Requests, { RequestDetail } from "./pages/Requests";
+import RequirementDetails, { RecordDetails } from "./pages/RequirementDetails";
+import Requirements from "./pages/Requirements";
+import Review from "./pages/Review";
+import Settings from "./pages/Settings";
+import UserDashboard from "./pages/UserDashboard";
+
+export function App() {
+  const { logged, currentRole, login, logout } = useAuth();
+
+  const [page, setPage] = useState("dashboard");
+  const [notify, setNotify] = useState(false);
+  const [notices, setNotices] = useState(initialNotices);
+  const [modal, setModal] = useState(null);
+  const [toast, setToast] = useState("");
+
+  const [selectedRequirement, setSelectedRequirement] = useState(0);
+  const [selectedDocument, setSelectedDocument] = useState(0);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+
+  const [addedRequirements, setAddedRequirements] = useState([]);
+  const [addedRecords, setAddedRecords] = useState([]);
+  const [addedRepresentatives, setAddedRepresentatives] = useState([]);
+
+  const [newRep, setNewRep] = useState({
+    name: "",
+    office: "",
+    program: "Information Technology",
+    email: "",
+    contact: "",
+    status: "Active",
+  });
+
+  const [newReq, setNewReq] = useState({
+    name: "",
+    category: "Faculty",
+    description: "",
+    responsible: "Program Head",
+    year: "2026–2027",
+  });
+
+  const [newRecord, setNewRecord] = useState({
+    name: "",
+    description: "",
+    responsible: "",
+    type: "Required",
+  });
+
+  const [requestRequirement, setRequestRequirement] = useState("");
+  const [requestRecipient, setRequestRecipient] = useState(
+    "Rizal Lim — Office Representative"
+  );
+  const [requestRemarks, setRequestRemarks] = useState("");
+  const [requestFile, setRequestFile] = useState(null);
+  const [requestRequirementLocked, setRequestRequirementLocked] =
+    useState(false);
+
+  const done = (message, next) => {
+    setModal(null);
+    setToast(message);
+    if (next) {
+      setPage(next);
     }
-    return _jsxs("main", { className: "compact-login", children: [_jsx("div", { className: "compact-login-overlay" }), _jsxs("section", { className: "compact-login-card", "aria-labelledby": "login-title", children: [_jsxs("div", { className: "compact-institution", children: [_jsxs("div", { className: "seal", children: [_jsx("span", { children: "MSU" }), _jsx("small", { children: "NAAWAN" })] }), _jsxs("div", { children: [_jsx("b", { children: "Mindanao State University" }), _jsx("span", { children: "at Naawan" })] })] }), _jsxs("div", { className: "compact-login-heading", children: [_jsx("h1", { id: "login-title", children: "COPC Records Portal" }), _jsx("p", { children: "Program compliance and document management" })] }), _jsxs("form", { onSubmit: submit, children: [_jsx("label", { htmlFor: "login-role", children: "Sign in as" }), _jsxs("div", { className: "compact-field", children: [_jsx("i", { "aria-hidden": "true", children: "\u2659" }), _jsx("select", { id: "login-role", value: role, onChange: event => setRole(event.target.value), children: roles.map(item => _jsx("option", { value: item, children: item }, item)) })] }), _jsx("label", { htmlFor: "login-email", children: "Email address" }), _jsxs("div", { className: "compact-field", children: [_jsx("i", { "aria-hidden": "true", children: "\u2709" }), _jsx("input", { id: "login-email", type: "email", autoComplete: "username", value: email, onChange: event => setEmail(event.target.value) })] }), _jsx("label", { htmlFor: "login-password", children: "Password" }), _jsxs("div", { className: "compact-field", children: [_jsx("i", { "aria-hidden": "true", children: "\u25A3" }), _jsx("input", { id: "login-password", type: showPassword ? "text" : "password", autoComplete: "current-password", value: password, onChange: event => setPassword(event.target.value) }), _jsx("button", { type: "button", onClick: () => setShowPassword(value => !value), children: showPassword ? "Hide" : "Show" })] }), _jsxs("div", { className: "compact-login-options", children: [_jsxs("label", { children: [_jsx("input", { type: "checkbox" }), " Remember me"] }), _jsx("span", { children: "Secure sign-in" })] }), error && _jsx("p", { className: "login-error", role: "alert", children: error }), _jsxs("button", { className: "compact-signin", type: "submit", children: ["Sign in ", _jsx("span", { "aria-hidden": "true", children: "\u2192" })] })] }), _jsx("p", { className: "demo-disclaimer", children: "Frontend demonstration only. Authentication and account recovery must be connected to a backend before deployment." })] }), _jsxs("div", { className: "login-brand-copy", children: [_jsx("span", { children: "MSU Naawan" }), _jsx("h2", { children: "Certificate of Program Compliance" }), _jsx("p", { children: "A centralized workspace for program requirements, document submissions, reviews, and records." })] })] });
-}
-function Header({ notify, onNotify, onLogout, role, onSettings, notices, markAll, openNotice, viewAll }) {
-    const [profileOpen, setProfileOpen] = useState(false);
-    const user = { name: "Account", initials: "U" };
-    return _jsxs("header", { children: [_jsxs("div", { className: "university-brand", children: [_jsx(Seal, { dark: true }), _jsxs("div", { children: [_jsx("b", { children: "Mindanao State University" }), _jsx("span", { children: "at Naawan" })] })] }), _jsx("div", { className: "header-title", children: _jsxs("div", { children: [_jsx("b", { children: "COPC Record Management System" }), _jsx("span", { children: "Bachelor of Science in Information Technology" })] }) }), _jsxs("div", { className: "header-user", children: [_jsxs("button", { className: "bell", "aria-label": "Notifications", onClick: onNotify, children: [_jsx(UiIcon, { name: "bell" }), notices.filter(n => !n.read).length > 0 && _jsx("i", { children: notices.filter(n => !n.read).length })] }), _jsxs("button", { className: "profile-trigger", onClick: () => setProfileOpen(!profileOpen), children: [_jsx("div", { className: "avatar", children: user.initials }), _jsxs("div", { children: [_jsx("b", { children: role }), _jsx("span", { children: user.name })] })] }), _jsx("button", { className: "logout", "aria-label": "Log out", onClick: onLogout, children: _jsx(UiIcon, { name: "logout" }) })] }), profileOpen && _jsxs("div", { className: "profile-menu", children: [_jsx("b", { children: user.name }), _jsx("span", { children: role }), _jsx("button", { onClick: onSettings, children: "View Profile" }), _jsx("button", { onClick: onSettings, children: "Account Settings" }), _jsx("button", { onClick: onLogout, children: "Log Out" })] }), notify && _jsxs("div", { className: "notifications", children: [_jsxs("div", { className: "notify-head", children: [_jsx("b", { children: "Notifications" }), _jsx("button", { className: "link", onClick: markAll, children: "Mark all as read" })] }), notices.slice(0, 3).map(n => _jsxs("button", { className: `notification ${n.read ? "read" : "unread"}`, onClick: () => openNotice(n), children: [_jsx("i", {}), _jsx("span", { className: "notice-type-icon", children: _jsx(UiIcon, { name: n.icon }) }), _jsxs("div", { children: [_jsx("b", { children: n.type }), _jsx("p", { children: n.description }), _jsx("small", { children: n.meta }), _jsx("span", { children: n.relative })] })] }, n.id)), _jsx("button", { className: "view-all", onClick: viewAll, children: "View all notifications" })] })] });
-}
-function Sidebar({ page, setPage, role }) {
-    const visibleNav = role === "COPC Coordinator" ? nav : [
-        { id: "dashboard", label: "Dashboard", icon: "home" },
-        { id: "requests", label: "My Requests", icon: "send" },
-        { id: "documents", label: "My Documents", icon: "file" },
-        { id: "settings", label: "Settings", icon: "settings" },
-    ];
-    return _jsxs("aside", { children: [_jsxs("div", { className: "program-card", children: [_jsx("span", { children: "Assigned program" }), _jsx("b", { children: "BS Information Technology" }), _jsx("small", { children: "Academic Year 2026\u20132027" })] }), _jsx("nav", { children: visibleNav.map(n => _jsxs("button", { className: page === n.id || (n.id === "requirements" && (page === "requirementDetail" || page === "recordDetail")) || (n.id === "documents" && page === "documentDetail") ? "active" : "", onClick: () => setPage(n.id), children: [_jsx("i", { children: _jsx(UiIcon, { name: n.icon }) }), n.label, n.id === "requests" && _jsx("em", { children: "0" })] }, n.id)) }), _jsxs("div", { className: "sidebar-help", children: [_jsx("b", { children: "Need assistance?" }), _jsx("span", { children: "Contact the Records Office" }), _jsx("button", { children: "View help guide" })] })] });
-}
-const PageHead = ({ title, subtitle, action }) => _jsxs("div", { className: "page-head", children: [_jsxs("div", { children: [_jsx("h1", { children: title }), _jsx("p", { children: subtitle })] }), action] });
-const Stat = ({ n, label, tone }) => _jsxs("div", { className: "stat", children: [_jsx("i", { className: tone, children: _jsx(UiIcon, { name: tone === "green" ? "check" : tone === "amber" ? "clock" : tone === "red" ? "revision" : "checklist" }) }), _jsxs("div", { children: [_jsx("strong", { children: n }), _jsx("span", { children: label })] }), _jsx("small", { children: "View details \u2192" })] });
-function Dashboard({ setPage, openRequest }) {
-    return _jsxs(_Fragment, {
-        children: [_jsx(PageHead, { title: "Welcome, COPC Coordinator!", subtitle: "Bachelor of Science in Information Technology" }), _jsx("div", { className: "dashboard-grid progress-only", children: _jsxs("section", { className: "card progress-card", children: [_jsx("div", { className: "section-head", children: _jsx("div", { children: _jsxs("h2", { children: [_jsx(UiIcon, { name: "chart" }), "Program Requirement Progress"] }) }) }), _jsxs("div", { className: "progress-content", children: [_jsx("div", { className: "ring", children: _jsxs("div", { children: [_jsx("strong", { children: "0%" }), _jsx("span", { children: "Completed" })] }) }), _jsxs("div", { className: "legend", children: [_jsxs("div", { children: [_jsx("i", { className: "navy" }), _jsx("span", { children: "Total Requirements" }), _jsx("b", { children: "0" })] }), _jsxs("div", { children: [_jsx("i", { className: "green" }), _jsx("span", { children: "Approved" }), _jsx("b", { children: "0" })] }), _jsxs("div", { children: [_jsx("i", { className: "amber" }), _jsx("span", { children: "Pending" }), _jsx("b", { children: "0" })] }), _jsxs("div", { children: [_jsx("i", { className: "red" }), _jsx("span", { children: "For Revision" }), _jsx("b", { children: "0" })] })] })] })] }) }), _jsxs("div", {
-            className: "dashboard-grid bottom", children: [_jsxs("section", {
-                className: "card", children: [_jsxs("div", { className: "section-head", children: [_jsx("div", { children: _jsxs("h2", { children: [_jsx(UiIcon, { name: "clock" }), "Recent Activities"] }) }), _jsx("button", { className: "link", onClick: () => setPage("requests"), children: "View All" })] }), [].map(item => _jsxs("div", { className: "activity", children: [_jsx("i", { className: item.tone, children: _jsx(UiIcon, { name: item.tone === "upload" ? "upload" : item.tone === "revision" ? "revision" : item.tone === "approval" ? "check" : "send" }) }), _jsxs("div", { children: [_jsxs("p", { children: [_jsx("b", { children: item.name }), " ", item.action] }), _jsx("span", { children: item.meta })] }), _jsx("time", { children: item.time })] }, `${item.name}-${item.time}`))]
-            }), _jsxs("section", {
-                className: "card", children: [_jsxs("div", { className: "section-head", children: [_jsx("div", { children: _jsxs("h2", { children: [_jsx(UiIcon, { name: "file" }), "Document Updates"] }) }), _jsx("button", { className: "link", onClick: () => setPage("documents"), children: "View All" })] }), [].map(item => _jsxs("div", { className: "doc-update", children: [_jsx("i", { className: `update-icon ${item.tone}`, children: _jsx(UiIcon, { name: item.tone === "approval" ? "check" : "users" }) }), _jsxs("div", { children: [_jsxs("p", { children: [_jsx("b", { children: item.name }), " ", item.action] }), _jsx("span", { children: item.meta })] }), _jsx("time", { children: item.time })] }, `${item.name}-${item.time}`))]
-            })]
-        })]
-    });
-}
-function UserDashboard({ role, setPage }) {
-    return _jsxs(_Fragment, { children: [
-        _jsx(PageHead, { title: "Dashboard", subtitle: role }),
-        _jsxs("div", { className: "stats", children: [
-            _jsx(Stat, { n: "0", label: "Pending Requests", tone: "amber" }),
-            _jsx(Stat, { n: "0", label: "Submitted", tone: "blue" }),
-            _jsx(Stat, { n: "0", label: "For Revision", tone: "red" }),
-            _jsx(Stat, { n: "0", label: "Approved", tone: "green" })
-        ] }),
-        _jsxs("section", { className: "card table-card user-action-card", children: [
-            _jsxs("div", { className: "section-head", children: [
-                _jsx("h2", { children: "Requests Requiring Action" }),
-                _jsx("button", { className: "link", onClick: () => setPage("requests"), children: "View All" })
-            ] }),
-            _jsx("p", { className: "empty-state", children: "No requests yet." })
-        ] }),
-        _jsxs("section", { className: "card user-activity-card", children: [
-            _jsx("h2", { children: "Recent Submission Activity" }),
-            _jsx("p", { className: "empty-state", children: "No submission activity yet." })
-        ] })
-    ] });
-}
-function Requirements({ openRequirement, openAdd, addedRequirements }) {
-    const [selected, setSelected] = useState(0);
-    const [query, setQuery] = useState(""), [filterOpen, setFilterOpen] = useState(false);
-    const [filters, setFilters] = useState([]), [draft, setDraft] = useState([]);
-    const categories = [];
-    const revisers = [];
-    const reviserRoles = [];
-    const enriched = [...requirements.map((r, i) => { const records = recordsByRequirement[r.name] || []; const calculatedStatus = records.some(x => x.status === "For Revision") ? "For Revision" : records.some(x => x.status !== "Approved") ? "Pending" : "Approved"; return { ...r, status: calculatedStatus, index: i, category: categories[i], reviser: revisers[i], reviserRole: reviserRoles[i] }; }), ...addedRequirements.map((r, i) => ({ ...r, index: requirements.length + i, status: "Requested", uploader: "—", role: r.responsible, updated: "—", reviser: "—", reviserRole: "" }))];
-    const categoryOptions = ["Faculty", "Curriculum", "Facilities", "Library", "Research", "Student Records", "Other"];
-    const roleOptions = ["Program Head", "Faculty", "Office Representative", "Dean"];
-    const toggle = (value) => setDraft(items => items.includes(value) ? items.filter(x => x !== value) : [...items, value]);
-    const filtered = enriched.filter(r => {
-        const haystack = `${r.name} ${r.uploader} ${r.reviser} ${r.category}`.toLowerCase();
-        const selectedCategories = filters.filter(x => categoryOptions.includes(x));
-        const roles = filters.filter(x => roleOptions.includes(x));
-        return haystack.includes(query.toLowerCase()) && (!selectedCategories.length || selectedCategories.includes(r.category)) && (!roles.length || roles.includes(r.role));
-    });
-    const clearFilters = () => { setFilters([]); setDraft([]); };
-    const selectedRecord = enriched[selected];
-    const descriptions = ["Faculty qualifications, assignments, and supporting records.", "Faculty teaching assignments and loads per semester.", "Course syllabi required for the BS Information Technology program.", "Curriculum and program documentation.", "Laboratory facilities, equipment, and supporting records.", "Library holdings, subscriptions, and learning resources.", "Program facilities and supporting infrastructure.", "Research and extension outputs and activities.", "Student academic and enrollment records.", "Additional documentary requirements prescribed for COPC."];
-    const recordCounts = requirements.map(r => (recordsByRequirement[r.name] || []).length), progress = requirements.map(r => { const rows = recordsByRequirement[r.name] || []; return rows.length ? Math.round(rows.filter(x => x.status === "Approved").length / rows.length * 100) : 0; });
-    return _jsxs(_Fragment, { children: [_jsx(PageHead, { title: "Program Requirements", subtitle: "Bachelor of Science in Information Technology" }), _jsxs("section", { className: "card requirement-summary", children: [_jsx("div", { className: "mini-ring", children: _jsxs("div", { children: [_jsx("strong", { children: "0%" }), _jsx("span", { children: "Completed" })] }) }), [["0", "Approved", "green", "check"], ["0", "Pending", "amber", "clock"], ["0", "For Revision", "red", "revision"]].map(x => _jsxs("div", { className: "requirement-metric", children: [_jsx("i", { className: x[2], children: _jsx(UiIcon, { name: x[3] }) }), _jsx("strong", { children: x[0] }), _jsx("span", { children: x[1] })] }, x[1]))] }), _jsxs("section", { className: "card table-card program-overview-table", children: [_jsxs("div", { className: "requirements-table-toolbar", children: [_jsxs("div", { className: "requirements-toolbar-title", children: [_jsx("b", { children: "Program Requirements" }), _jsxs("span", { children: ["Showing ", filtered.length, " of ", requirements.length, " requirements"] })] }), _jsxs("div", { className: "requirements-actions", children: [_jsxs("div", { className: "search", children: [_jsx(UiIcon, { name: "search" }), _jsx("input", { value: query, onChange: e => setQuery(e.target.value), "aria-label": "Search requirements" })] }), _jsxs("div", { className: "filter-wrap", children: [_jsxs("button", { className: `btn filter-button ${filters.length ? "has-filters" : ""}`, onClick: () => { setDraft(filters); setFilterOpen(!filterOpen); }, children: [_jsx(UiIcon, { name: "filter" }), "Filter", filters.length > 0 && _jsx("em", { children: filters.length })] }), filterOpen && _jsxs("div", { className: "filter-popover", children: [_jsxs("div", { className: "filter-popover-head", children: [_jsx("b", { children: "Filter Requirements" }), _jsx("button", { onClick: () => setFilterOpen(false), children: "\u00D7" })] }), _jsxs("div", { className: "filter-section", children: [_jsx("span", { children: "CATEGORY" }), categoryOptions.map(x => _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: draft.includes(x), onChange: () => toggle(x) }), x] }, x))] }), _jsxs("div", { className: "filter-section", children: [_jsx("span", { children: "UPLOADER ROLE" }), roleOptions.map(x => _jsxs("label", { children: [_jsx("input", { type: "checkbox", checked: draft.includes(x), onChange: () => toggle(x) }), x] }, x))] }), _jsxs("div", { className: "filter-actions", children: [_jsx("button", { className: "btn secondary", onClick: () => setDraft([]), children: "Clear Filters" }), _jsx("button", { className: "btn primary", onClick: () => { setFilters(draft); setFilterOpen(false); }, children: "Apply Filters" })] })] })] }), _jsxs("button", { className: "btn primary send-request-main", onClick: openAdd, children: [_jsx(UiIcon, { name: "checklist" }), "Add Requirement"] })] })] }), filters.length > 0 && _jsxs("div", { className: "active-filters", children: [_jsx("span", { children: "Active filters:" }), filters.map(x => _jsxs("button", { onClick: () => { setFilters(items => items.filter(v => v !== x)); setDraft(items => items.filter(v => v !== x)); }, children: [x, " \u00D7"] }, x)), _jsx("button", { className: "clear-all", onClick: clearFilters, children: "Clear all" })] }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: "#" }), _jsx("th", { children: "COPC Requirement" }), _jsx("th", { children: "Description" }), _jsx("th", { children: "Records" }), _jsx("th", { children: "Progress" })] }) }), _jsxs("tbody", { children: [filtered.map(r => _jsxs("tr", { className: "clickable-row", onClick: () => openRequirement(r.index), children: [_jsx("td", { children: r.index + 1 }), _jsxs("td", { children: [_jsx("b", { children: r.name }), _jsx("small", { children: r.category })] }), _jsx("td", { children: "description" in r ? r.description : descriptions[r.index] }), _jsx("td", { children: _jsx("b", { children: recordCounts[r.index] ?? 0 }) }), _jsx("td", { children: _jsxs("div", { className: "table-progress", children: [_jsx("span", { children: _jsx("i", { style: { width: `${progress[r.index] ?? 0}%` } }) }), _jsxs("b", { children: [progress[r.index] ?? 0, "%"] })] }) })] }, r.name)), filtered.length === 0 && _jsx("tr", { children: _jsx("td", { colSpan: 5, children: _jsxs("div", { className: "requirements-empty", children: [_jsx(UiIcon, { name: "filter" }), _jsx("b", { children: "No requirements match your current filters." }), _jsx("p", { children: "Adjust your search or clear the active filters." }), _jsx("button", { className: "btn secondary", onClick: () => { clearFilters(); setQuery(""); }, children: "Clear Filters" })] }) }) })] })] })] })] });
-}
-const recordsByRequirement = {};
-function RequirementDetails({ index, setPage, openRequest, openAddRecord, openRecord, addedRecords }) {
-    const requirement = requirements[index] || requirements[0];
-    const [query, setQuery] = useState(""), [recordFilterOpen, setRecordFilterOpen] = useState(false), [recordStatus, setRecordStatus] = useState("All"), [draftRecordStatus, setDraftRecordStatus] = useState("All");
-    const baseRecords = recordsByRequirement[requirement.name] || [];
-    const allRecords = [...baseRecords, ...addedRecords.map(r => ({ name: r.name, file: null, size: "", assigned: r.responsible || "—", role: "", status: "Requested", updated: "—", version: "—" }))];
-    const records = allRecords.filter(r => r.name.toLowerCase().includes(query.toLowerCase()) && (recordStatus === "All" || r.status === recordStatus));
-    const approved = allRecords.filter(r => r.status === "Approved").length, pending = allRecords.filter(r => r.status === "Pending" || r.status === "For Review").length, revision = allRecords.filter(r => r.status === "For Revision").length, requested = allRecords.filter(r => r.status === "Requested").length;
-    return _jsxs(_Fragment, { children: [_jsx("button", { className: "back", onClick: () => setPage("requirements"), children: "\u2190 Back to Program Requirements" }), _jsx(PageHead, { title: requirement.name, subtitle: "Faculty qualifications, assignments, and supporting documentation required for COPC compliance." }), _jsx("div", { className: "record-summary", children: [[String(records.length), "Total Records", "navy"], [String(approved), "Approved", "green"], [String(pending), "Pending", "amber"], [String(revision), "For Revision", "red"], [String(requested), "Requested", "blue"]].map(x => _jsxs("div", { children: [_jsx("strong", { children: x[0] }), _jsx("span", { children: x[1] })] }, x[1])) }), _jsxs("section", { className: "card table-card required-records", children: [_jsxs("div", { className: "requirements-table-toolbar", children: [_jsxs("div", { className: "requirements-toolbar-title", children: [_jsx("b", { children: "Required Records" }), _jsxs("span", { children: ["Showing ", records.length, " of ", allRecords.length, " records"] })] }), _jsxs("div", { className: "requirements-actions", children: [_jsxs("div", { className: "search", children: [_jsx(UiIcon, { name: "search" }), _jsx("input", { value: query, onChange: e => setQuery(e.target.value), "aria-label": "Search records" })] }), _jsxs("div", { className: "filter-wrap", children: [_jsxs("button", { className: `btn filter-button ${recordStatus !== "All" ? "has-filters" : ""}`, onClick: () => { setDraftRecordStatus(recordStatus); setRecordFilterOpen(!recordFilterOpen); }, children: [_jsx(UiIcon, { name: "filter" }), "Filter", recordStatus !== "All" && _jsx("em", { children: "0" })] }), recordFilterOpen && _jsxs("div", { className: "filter-popover record-filter-popover", children: [_jsxs("div", { className: "filter-popover-head", children: [_jsx("b", { children: "Filter Required Records" }), _jsx("button", { onClick: () => setRecordFilterOpen(false), children: "\u00D7" })] }), _jsxs("div", { className: "record-status-options", children: [_jsx("span", { children: "STATUS" }), ["All", "Approved", "For Review", "Submitted", "Pending", "For Revision", "Requested"].map(x => _jsxs("label", { children: [_jsx("input", { type: "radio", name: "record-status", checked: draftRecordStatus === x, onChange: () => setDraftRecordStatus(x) }), x] }, x))] }), _jsxs("div", { className: "filter-actions", children: [_jsx("button", { className: "btn secondary", onClick: () => setDraftRecordStatus("All"), children: "Clear Filters" }), _jsx("button", { className: "btn primary", onClick: () => { setRecordStatus(draftRecordStatus); setRecordFilterOpen(false); }, children: "Apply Filters" })] })] })] }), _jsx("button", { className: "btn secondary", onClick: openAddRecord, children: "\uFF0B Add Required Record" }), _jsxs("button", { className: "btn primary", onClick: openRequest, children: [_jsx(UiIcon, { name: "send" }), "Send Request"] })] })] }), recordStatus !== "All" && _jsxs("div", { className: "active-filters", children: [_jsx("span", { children: "Active filter:" }), _jsxs("button", { onClick: () => { setRecordStatus("All"); setDraftRecordStatus("All"); }, children: [recordStatus, " \u00D7"] }), _jsx("button", { className: "clear-all", onClick: () => { setRecordStatus("All"); setDraftRecordStatus("All"); }, children: "Clear all" })] }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: "#" }), _jsx("th", { children: "Required Record" }), _jsx("th", { children: "Assigned To" }), _jsx("th", { children: "Status" }), _jsx("th", { children: "Last Updated" })] }) }), _jsxs("tbody", { children: [records.map((r, i) => _jsxs("tr", { className: "clickable-row", onClick: () => r.file ? openRecord(r) : openRequest(), children: [_jsx("td", { children: i + 1 }), _jsxs("td", { children: [_jsx("b", { children: r.name }), _jsx("small", { children: r.file || "No document submitted" })] }), _jsx("td", { children: r.assigned === "—" ? "—" : `${r.assigned} — ${r.role}` }), _jsx("td", { children: _jsx(Badge, { status: r.status }) }), _jsx("td", { children: r.updated })] }, r.name)), records.length === 0 && _jsx("tr", { children: _jsx("td", { colSpan: 5, children: _jsxs("div", { className: "requirements-empty", children: [_jsx(UiIcon, { name: "filter" }), _jsx("b", { children: "No required records match your filters." }), _jsx("p", { children: "Try another status or clear the current search." }), _jsx("button", { className: "btn secondary", onClick: () => { setRecordStatus("All"); setDraftRecordStatus("All"); setQuery(""); }, children: "Clear Filters" })] }) }) })] })] })] })] });
-}
-function RecordDetails({ setPage, openRevision, openApprove, record, parentRequirement }) {
-    return _jsx(DocumentDetails, { index: 0, setPage: setPage, openRevision: openRevision, openApprove: openApprove, source: "requirements", record: record, parentRequirement: parentRequirement });
-}
-const requestRows = [];
-function Requests({ setPage }) {
-    return _jsxs(_Fragment, { children: [_jsx(PageHead, { title: "Document Requests", subtitle: "Track requests for Bachelor of Science in Information Technology.", action: _jsx("button", { className: "btn primary", children: "\uFF0B New request" }) }), _jsxs("section", { className: "card table-card", children: [_jsxs("div", { className: "toolbar stacked", children: [_jsxs("div", { className: "search", children: ["\u2315 ", _jsx("input", { "aria-label": "Search requests" })] }), _jsx("div", { className: "tabs", children: ["All", "Requested", "Submitted", "For Revision", "Resubmitted", "Approved"].map((x, i) => _jsx("button", { className: i === 0 ? "active" : "", children: x }, x)) })] }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: "Requirement" }), _jsx("th", { children: "Requested from" }), _jsx("th", { children: "Role" }), _jsx("th", { children: "Date requested" }), _jsx("th", { children: "Status" }), _jsx("th", { children: "Last activity" })] }) }), _jsx("tbody", { children: requestRows.map(r => _jsxs("tr", { className: "clickable-row", onClick: () => setPage(r[4] === "Submitted" ? "review" : "requestDetail"), children: [_jsx("td", { children: _jsx("b", { children: r[0] }) }), _jsx("td", { children: r[1] }), _jsx("td", { children: r[2] }), _jsx("td", { children: r[3] }), _jsx("td", { children: _jsx(Badge, { status: r[4] }) }), _jsx("td", { children: r[5] })] }, r[0])) })] })] })] });
-}
-function RequestDetail({ setPage }) {
-    return _jsxs(_Fragment, { children: [
-        _jsx("button", { className: "back", onClick: () => setPage("requests"), children: "← Back to requests" }),
-        _jsx(PageHead, { title: "Request Details", subtitle: "Request information will appear here when a request is selected." }),
-        _jsx("section", { className: "card", children: _jsx("p", { className: "empty-state", children: "No request selected." }) })
-    ] });
-}
-const documentData = [];
-function Documents({ openDocument }) {
-    const [query, setQuery] = useState(""), [filterOpen, setFilterOpen] = useState(false), [status, setStatus] = useState("All"), [draftStatus, setDraftStatus] = useState("All"), [sort, setSort] = useState("Latest Uploaded");
-    let docs = documentData.map((d, i) => ({ ...d, index: i })).filter(d => (`${d.name} ${d.requirement} ${d.record} ${d.uploader}`).toLowerCase().includes(query.toLowerCase()) && (status === "All" || d.status === status));
-    if (sort === "Document Name A–Z")
-        docs.sort((a, b) => a.name.localeCompare(b.name));
-    if (sort === "Document Name Z–A")
-        docs.sort((a, b) => b.name.localeCompare(a.name));
-    if (sort === "Oldest Uploaded")
-        docs.reverse();
-    return _jsxs(_Fragment, { children: [_jsx(PageHead, { title: "Documents", subtitle: "Manage, review, and track submitted COPC documents.", action: _jsxs("button", { className: "btn secondary icon-button", children: [_jsx(UiIcon, { name: "download" }), "Export Document List"] }) }), _jsx("section", { className: "card document-summary", children: [["0", "All Documents", "file", "navy"], ["0", "For Review", "clock", "amber"], ["0", "Approved", "check", "green"], ["0", "For Revision", "revision", "red"]].map(x => _jsxs("div", { children: [_jsx("i", { className: x[3], children: _jsx(UiIcon, { name: x[2] }) }), _jsxs("span", { children: [_jsx("strong", { children: x[0] }), _jsx("small", { children: x[1] })] })] }, x[1])) }), _jsxs("section", { className: "card table-card documents-workspace", children: [_jsxs("div", { className: "document-toolbar", children: [_jsxs("div", { className: "search", children: [_jsx(UiIcon, { name: "search" }), _jsx("input", { value: query, onChange: e => setQuery(e.target.value), "aria-label": "Search documents" })] }), _jsxs("div", { className: "filter-wrap", children: [_jsxs("button", { className: `btn filter-button ${status !== "All" ? "has-filters" : ""}`, onClick: () => { setDraftStatus(status); setFilterOpen(!filterOpen); }, children: [_jsx(UiIcon, { name: "filter" }), "Filter", status !== "All" && _jsx("em", { children: "0" })] }), filterOpen && _jsxs("div", { className: "filter-popover document-filter", children: [_jsxs("div", { className: "filter-popover-head", children: [_jsx("b", { children: "Filter Documents" }), _jsx("button", { onClick: () => setFilterOpen(false), children: "\u00D7" })] }), _jsxs("div", { className: "filter-section", children: [_jsx("span", { children: "DOCUMENT STATUS" }), ["All", "Requested", "For Review", "Approved", "For Revision"].map(x => _jsxs("label", { children: [_jsx("input", { type: "radio", name: "doc-status", checked: draftStatus === x, onChange: () => setDraftStatus(x) }), x] }, x))] }), _jsxs("div", { className: "filter-section", children: [_jsx("span", { children: "ADDITIONAL FILTERS" }), _jsxs("label", { children: ["Requirement", _jsxs("select", { children: [_jsx("option", { children: "All Requirements" }), _jsx("option", { children: "Selected requirement" }), _jsx("option", { children: "Syllabi" })] })] }), _jsxs("label", { children: ["Uploaded By", _jsxs("select", { children: [_jsx("option", { children: "All Uploaders" })] })] })] }), _jsxs("div", { className: "filter-actions", children: [_jsx("button", { className: "btn secondary", onClick: () => setDraftStatus("All"), children: "Clear Filters" }), _jsx("button", { className: "btn primary", onClick: () => { setStatus(draftStatus); setFilterOpen(false); }, children: "Apply Filters" })] })] })] }), _jsxs("select", { value: sort, onChange: e => setSort(e.target.value), children: [_jsx("option", { children: "Latest Uploaded" }), _jsx("option", { children: "Oldest Uploaded" }), _jsx("option", { children: "Recently Updated" }), _jsx("option", { children: "Document Name A\u2013Z" }), _jsx("option", { children: "Document Name Z\u2013A" })] })] }), _jsxs("table", { children: [_jsx("thead", { children: _jsxs("tr", { children: [_jsx("th", { children: "Document" }), _jsx("th", { children: "Related Record" }), _jsx("th", { children: "Uploaded By" }), _jsx("th", { children: "Date Uploaded" }), _jsx("th", { children: "Version" }), _jsx("th", { children: "Status" })] }) }), _jsxs("tbody", { children: [docs.map(d => _jsxs("tr", { className: "clickable-row document-row", onClick: () => openDocument(d.index), children: [_jsx("td", { children: _jsxs("div", { className: "document-file", children: [_jsx("i", { children: "PDF" }), _jsxs("span", { children: [_jsx("b", { children: d.name }), _jsxs("small", { children: ["PDF \u2022 ", d.size] })] })] }) }), _jsxs("td", { children: [_jsx("b", { children: d.requirement }), _jsx("small", { children: d.record })] }), _jsxs("td", { children: [_jsx("b", { children: d.uploader }), _jsx("small", { children: d.role })] }), _jsxs("td", { children: [d.date, _jsx("small", { children: d.time })] }), _jsx("td", { children: _jsx("b", { children: d.version }) }), _jsx("td", { children: _jsx(Badge, { status: d.status }) })] }, d.name)), docs.length === 0 && _jsx("tr", { children: _jsx("td", { colSpan: 6, children: _jsxs("div", { className: "requirements-empty", children: [_jsx(UiIcon, { name: "file" }), _jsx("b", { children: "No documents found." }), _jsx("p", { children: "Try changing your search or filters." })] }) }) })] })] })] })] });
-}
-function DocumentDetails({ index, setPage, openRevision, openApprove, source = "documents", record, parentRequirement }) {
-    const base = documentData[index] || documentData[0];
-    const doc = record ? { name: record.file || "", size: record.size, requirement: parentRequirement || "Faculty Information", record: record.name, uploader: record.assigned, role: record.role, date: record.updated.split(" • ")[0], time: record.updated.split(" • ")[1] || "", version: record.version, status: record.status } : base;
-    if (!doc) return _jsx("section", { className: "card", children: _jsx("p", { className: "empty-state", children: "No document selected." }) });
-    const [comment, setComment] = useState(""), [comments, setComments] = useState([]);
-    const reviewEvents = [];
-    const fromRequirements = source === "requirements";
-    return _jsxs(_Fragment, {
-        children: [_jsxs("button", { className: "back", onClick: () => setPage(fromRequirements ? "requirementDetail" : "documents"), children: ["\u2190 Back to ", fromRequirements ? "Faculty Information" : "Documents"] }), _jsx(PageHead, { title: doc.record, subtitle: `${fromRequirements ? "Requirements" : "Documents"} > ${doc.requirement} > ${doc.record}`, action: _jsxs("button", { className: "btn secondary icon-button", children: [_jsx(UiIcon, { name: "download" }), "Download"] }) }), _jsxs("div", {
-            className: "document-detail-grid", children: [_jsxs("div", {
-                children: [_jsxs("section", { className: "pdf document-viewer", children: [_jsxs("div", { className: "pdf-tools", children: [_jsx("span", { children: doc.name }), _jsxs("div", { children: [_jsx("button", { children: "\u2039" }), _jsx("span", { children: "1 / 4" }), _jsx("button", { children: "\u203A" }), _jsx("button", { children: "\u2212" }), _jsx("b", { children: "100%" }), _jsx("button", { children: "\uFF0B" }), _jsx("button", { children: "Fit Page" }), _jsx("button", { "aria-label": "Download", children: _jsx(UiIcon, { name: "download" }) })] })] }), _jsxs("div", { className: "viewer-body", children: [_jsx("aside", { className: "page-thumbnails", children: [1, 2, 3, 4].map(n => _jsx("button", { className: n === 1 ? "active" : "", children: _jsx("span", { children: n }) }, n)) }), _jsxs("div", { className: "paper", children: [_jsx("div", { className: "paper-seal", children: "MSU" }), _jsx("b", { children: "MINDANAO STATE UNIVERSITY AT NAAWAN" }), _jsx("span", { children: "College of Information Technology" }), _jsx("h2", { children: doc.record.toUpperCase() }), _jsxs("p", { children: [_jsx("b", { children: "Bachelor of Science in Information Technology" }), _jsx("br", {}), "Academic Year 2026\u20132027"] }), doc.name.includes("Faculty_Qualifications") && _jsxs(_Fragment, { children: [_jsx("h3", { children: "FACULTY QUALIFICATION SUMMARY" }), _jsx("table", { children: _jsxs("tbody", { children: [_jsxs("tr", { children: [_jsx("td", { children: "Faculty Name" }), _jsx("td", { children: "Academic Rank" }), _jsx("td", { children: "Highest Attainment" })] }), _jsxs("tr", { children: [_jsx("td", { children: "Alex Rivera" }), _jsx("td", { children: "Assistant Professor" }), _jsx("td", { children: "MS Information Technology" })] }), _jsxs("tr", { children: [_jsx("td", { children: "Jamie Cruz" }), _jsx("td", { children: "Instructor III" }), _jsx("td", { children: "MS Computer Science" })] }), _jsxs("tr", { children: [_jsx("td", { children: "Patricia Flores" }), _jsx("td", { children: "Instructor II" }), _jsx("td", { children: "MIT" })] })] }) }), _jsx("p", { className: "paper-copy", children: "This fictional demonstration document summarizes academic qualifications, specialization, teaching experience, and relevant certifications." })] })] })] })] }), _jsxs("section", {
-                    className: "card comments-card", children: [_jsx("h2", { children: "Remarks / Comments" }), _jsxs("div", {
-                        className: "comment-form", children: [_jsx("input", { value: comment, onChange: e => setComment(e.target.value), "aria-label": "Write a comment or review note" }), _jsx("button", {
-                            className: "btn primary", onClick: () => {
-                                if (comment.trim()) {
-                                    setComments(x => [...x, comment]);
-                                    setComment("");
-                                }
-                            }, children: "Add Comment"
-                        })]
-                    }), comments.map((c, i) => _jsxs("div", { className: "comment", children: [_jsx("div", { className: "avatar small", children: "U" }), _jsxs("div", { children: [_jsxs("b", { children: ["Rubie Jane Jabagat ", _jsx("small", { children: "COPC Coordinator \u2022 Oct 20, 2026 \u2022 9:45 AM" })] }), _jsx("p", { children: c })] })] }, `${c}-${i}`))]
-                })]
-            }), _jsxs("section", { className: "card document-info-panel", children: [_jsxs("div", { className: "section-head", children: [_jsx("h2", { children: "Document Information" }), _jsx(Badge, { status: doc.status })] }), [["File", doc.name], ["Requirement", doc.requirement], ["Required Record", doc.record], ["Category", doc.requirement.includes("Faculty") ? "Faculty" : "Program Records"], ["Uploaded By", doc.uploader], ["Role", doc.role], ["Date Uploaded", `${doc.date} • ${doc.time}`], ["Current Version", doc.version], ["File Size", doc.size]].map(x => _jsxs("div", { className: "document-info-row", children: [_jsx("span", { children: x[0] }), _jsx("b", { children: x[1] })] }, x[0])), _jsxs("div", { className: "panel-history", children: [_jsx("h3", { children: "VERSION HISTORY" }), [].map((x, i) => _jsxs("button", { children: [_jsx("i", {}), _jsxs("span", { children: [_jsxs("b", { children: ["Version ", x[0].replace("v", ""), " ", x[1] && _jsx("em", { children: x[1] })] }), _jsxs("small", { children: [x[2], _jsx("br", {}), "Uploaded by ", doc.uploader] })] })] }, x[0]))] }), _jsxs("div", { className: "panel-history review-history", children: [_jsx("h3", { children: "REVIEW HISTORY" }), reviewEvents.map((x, i) => _jsxs("div", { children: [_jsx("i", { className: x.startsWith("Approved") ? "green" : x.startsWith("Revision requested") ? "red" : "" }), _jsxs("span", { children: [_jsx("b", { children: x }), _jsxs("small", { children: ["Oct ", 20 - i, ", 2026 \u2022 9:45 AM"] }), x.startsWith("Approved") && _jsx("em", { className: "history-remark", children: "Complete and verified." }), x.startsWith("Revision requested") && _jsx("em", { className: "history-remark", children: record?.remark || "Please update the document based on the coordinator's remarks." })] })] }, x))] }), doc.status !== "Approved" && _jsxs("div", { className: "document-decision-panel", children: [_jsx("span", { children: "REVIEW DECISION" }), _jsx("p", { children: "Complete your review of this document before selecting an action." }), _jsxs("div", { children: [_jsx("button", { className: "btn danger", onClick: openRevision, children: "Request Revision" }), _jsx("button", { className: "btn success", onClick: openApprove, children: "Approve Document" })] })] })] })]
-        })]
-    });
-}
-function Review({ setPage }) {
-    return _jsxs(_Fragment, { children: [
-        _jsx("button", { className: "back", onClick: () => setPage("documents"), children: "← Back to documents" }),
-        _jsx(PageHead, { title: "Review Document", subtitle: "Select a submitted document to begin its review." }),
-        _jsx("section", { className: "card", children: _jsx("p", { className: "empty-state", children: "No document is available for review." }) })
-    ] });
-}
-function Reports() {
-    return _jsxs(_Fragment, { children: [_jsx(PageHead, { title: "Reports", subtitle: "Document and requirement progress \u00B7 Bachelor of Science in Information Technology", action: _jsxs("div", { children: [_jsxs("button", { className: "btn secondary icon-button", children: [_jsx(UiIcon, { name: "download" }), "Export report"] }), " ", _jsx("button", { className: "btn primary", children: "Generate report" })] }) }), _jsxs("div", { className: "stats", children: [_jsx(Stat, { n: "0", label: "Total requirements", tone: "navy" }), _jsx(Stat, { n: "0", label: "Approved", tone: "green" }), _jsx(Stat, { n: "0", label: "Submitted", tone: "blue" }), _jsx(Stat, { n: "0", label: "For revision", tone: "red" })] }), _jsxs("div", { className: "reports-grid", children: [_jsxs("section", { className: "card", children: [_jsxs("div", { className: "section-head", children: [_jsx("h2", { children: "COPC requirement progress" }), _jsx("select", { children: _jsx("option", { children: "Academic Year 2026\u20132027" }) })] }), _jsx("div", { className: "bar-chart", children: [].map(x => _jsxs("div", { children: [_jsx("span", { children: x[0] }), _jsx("div", { children: _jsx("i", { style: { width: `${x[1]}%` } }) }), _jsxs("b", { children: [x[1], "%"] })] }, x[0])) })] }), _jsxs("section", { className: "card", children: [_jsx("h2", { children: "Status distribution" }), _jsx("div", { className: "donut", children: _jsxs("div", { children: [_jsx("strong", { children: "0" }), _jsx("span", { children: "Total" })] }) }), _jsxs("div", { className: "mini-legend", children: [_jsxs("span", { children: [_jsx("i", { className: "green" }), " Approved 0"] }), _jsxs("span", { children: [_jsx("i", { className: "amber" }), " Pending 0"] }), _jsxs("span", { children: [_jsx("i", { className: "red" }), " For Revision 0"] })] })] })] })] });
-}
-function Settings() {
-    return _jsxs(_Fragment, { children: [_jsx(PageHead, { title: "Account Settings", subtitle: "Manage your profile, security, and notification preferences." }), _jsxs("div", { className: "settings-grid", children: [_jsxs("section", { className: "card form-card", children: [_jsx("h2", { children: "Profile information" }), _jsx("p", { children: "Your role and assigned program are managed by the university." }), _jsxs("div", { className: "profile-row", children: [_jsx("div", { className: "avatar large", children: "U" }), _jsxs("div", { children: [_jsx("b", { children: "Account" }), _jsx("span", { children: "" })] }), _jsx("button", { className: "btn secondary", children: "Change photo" })] }), _jsxs("div", { className: "form-grid", children: [_jsxs("label", { children: ["Full name", _jsx("input", { defaultValue: "" })] }), _jsxs("label", { children: ["Email address", _jsx("input", { defaultValue: "" })] }), _jsxs("label", { children: ["Role", _jsx("input", { value: "", disabled: true })] }), _jsxs("label", { children: ["Assigned program", _jsx("input", { value: "", disabled: true })] })] }), _jsx("button", { className: "btn primary", children: "Save changes" })] }), _jsxs("section", { className: "card form-card", children: [_jsx("h2", { children: "Security" }), ["Current password", "New password", "Confirm new password"].map(x => _jsxs("label", { children: [x, _jsx("input", { type: "password", "aria-label": "Password" })] }, x)), _jsx("button", { className: "btn secondary", children: "Change password" })] }), _jsxs("section", { className: "card form-card notifications-settings", children: [_jsx("h2", { children: "Notification preferences" }), ["Document requests", "Revision requests", "New submissions", "Document approvals"].map(x => _jsxs("label", { children: [_jsxs("span", { children: [_jsx("b", { children: x }), _jsx("small", { children: "Receive in-app notifications" })] }), _jsx("input", { type: "checkbox", defaultChecked: true })] }, x))] })] })] });
-}
-function NotificationsPage({ notices, markAll, openNotice }) {
-    const [query, setQuery] = useState(""), [filter, setFilter] = useState("All");
-    const list = notices.filter(n => (n.description + " " + n.meta).toLowerCase().includes(query.toLowerCase()) && (filter === "All" || (filter === "Unread" && !n.read) || (filter === "Submissions" && n.type.includes("SUBMISSION")) || (filter === "Document Requests" && n.type.includes("REQUEST")) || (filter === "Revisions" && n.type.includes("REVISION")) || (filter === "Approvals" && n.type.includes("APPROVED"))));
-    return _jsxs(_Fragment, { children: [_jsx(PageHead, { title: "Notifications", subtitle: "Stay updated on document submissions, requests, revisions, and approvals for Bachelor of Science in Information Technology.", action: _jsx("button", { className: "btn secondary", onClick: markAll, children: "Mark all as read" }) }), _jsxs("section", { className: "card notifications-page", children: [_jsxs("div", { className: "notification-tools", children: [_jsxs("div", { className: "search", children: ["\u2315 ", _jsx("input", { value: query, onChange: e => setQuery(e.target.value), "aria-label": "Search notifications" })] }), _jsxs("select", { value: filter, onChange: e => setFilter(e.target.value), children: [_jsx("option", { children: "All" }), _jsx("option", { children: "Unread" }), _jsx("option", { children: "Submissions" }), _jsx("option", { children: "Document Requests" }), _jsx("option", { children: "Revisions" }), _jsx("option", { children: "Approvals" })] })] }), _jsx("div", { className: "notification-list", children: list.map(n => _jsxs("article", { className: `notice-row ${n.read ? "read" : "unread"}`, children: [_jsx("i", { className: "unread-dot" }), _jsx("span", { className: `notice-page-icon ${n.icon}`, children: _jsx(UiIcon, { name: n.icon }) }), _jsxs("div", { children: [_jsx("b", { children: n.type }), _jsx("h3", { children: n.description }), _jsx("p", { children: n.meta }), _jsx("time", { children: n.date })] }), _jsx("button", { className: "btn secondary", onClick: () => openNotice(n), children: n.target === "requestDetail" ? "View Request" : n.type.includes("REVISION") ? "View Revision" : "View Document" })] }, n.id)) }), list.length === 0 && _jsxs("div", { className: "empty", children: [_jsx("b", { children: "No notifications found" }), _jsx("p", { children: "Try changing your search or filter." })] })] })] });
-}
-function App() {
-    const [logged, setLogged] = useState(false), [currentRole, setCurrentRole] = useState("COPC Coordinator"), [page, setPage] = useState("dashboard"), [notify, setNotify] = useState(false), [notices, setNotices] = useState(initialNotices), [modal, setModal] = useState(null), [toast, setToast] = useState("");
-    const [selectedRequirement, setSelectedRequirement] = useState(0);
-    const [selectedDocument, setSelectedDocument] = useState(0);
-    const [selectedRecord, setSelectedRecord] = useState(null);
-    const [addedRequirements, setAddedRequirements] = useState([]), [addedRecords, setAddedRecords] = useState([]);
-    const [newReq, setNewReq] = useState({ name: "", category: "Faculty", description: "", responsible: "Program Head", year: "2026–2027" });
-    const [newRecord, setNewRecord] = useState({ name: "", description: "", responsible: "", type: "Required" });
-    const [requestRequirement, setRequestRequirement] = useState(""), [requestRecipient, setRequestRecipient] = useState(""), [requestRemarks, setRequestRemarks] = useState(""), [requestFile, setRequestFile] = useState(null);
-    const [requestRequirementLocked, setRequestRequirementLocked] = useState(false);
-    const done = (message, next) => {
-        setModal(null); setToast(message); if (next)
-            setPage(next); setTimeout(() => setToast(""), 3000);
-    };
-    const markAll = () => setNotices(items => items.map(n => ({ ...n, read: true })));
-    const openNotice = (notice) => { setNotices(items => items.map(n => n.id === notice.id ? { ...n, read: true } : n)); setNotify(false); setPage(notice.target); };
-    if (!logged)
-        return _jsx(Login, { onLogin: (role) => { setCurrentRole(role); setLogged(true); } });
-    return _jsxs("div", {
-        className: "app", children: [_jsx(Header, { role: currentRole, notify: notify, onNotify: () => setNotify(!notify), onLogout: () => setModal("logout"), onSettings: () => setPage("settings"), notices: notices, markAll: markAll, openNotice: openNotice, viewAll: () => { setNotify(false); setPage("notifications"); } }), _jsx(Sidebar, { role: currentRole, page: page, setPage: setPage }), _jsxs("main", { className: "content", children: [_jsx("div", { className: "page-view", key: page, children: [page === "dashboard" && (currentRole === "COPC Coordinator" ? _jsx(Dashboard, { setPage: setPage, notify: notify, onNotify: () => setNotify(!notify), onLogout: () => setModal("logout"), openRequest: () => { setRequestRequirement(""); setRequestRequirementLocked(true); setModal("request"); } }) : _jsx(UserDashboard, { role: currentRole, setPage: setPage })), page === "requirements" && _jsx(Requirements, { addedRequirements: addedRequirements, openAdd: () => setModal("addRequirement"), openRequirement: (index) => { setSelectedRequirement(index); setPage("requirementDetail"); } }), page === "requirementDetail" && _jsx(RequirementDetails, { index: selectedRequirement, setPage: setPage, openRequest: () => { setRequestRequirement(requirements[selectedRequirement]?.name || addedRequirements[selectedRequirement - requirements.length]?.name || ""); setRequestRequirementLocked(true); setModal("request"); }, openAddRecord: () => setModal("addRecord"), openRecord: (record) => { setSelectedRecord(record); setPage("recordDetail"); }, addedRecords: addedRecords }), page === "recordDetail" && _jsx(RecordDetails, { setPage: setPage, openRevision: () => setModal("revision"), openApprove: () => setModal("approve"), record: selectedRecord, parentRequirement: requirements[selectedRequirement]?.name || "" }), page === "requests" && _jsx(Requests, { setPage: setPage }), page === "requestDetail" && _jsx(RequestDetail, { setPage: setPage }), page === "documents" && _jsx(Documents, { openDocument: (index) => { setSelectedDocument(index); setPage("documentDetail"); } }), page === "documentDetail" && _jsx(DocumentDetails, { index: selectedDocument, setPage: setPage, openRevision: () => setModal("revision"), openApprove: () => setModal("approve") }), page === "review" && _jsx(Review, { setPage: setPage, openRevision: () => setModal("revision"), openApprove: () => setModal("approve") }), page === "reports" && _jsx(Reports, {}), page === "settings" && _jsx(Settings, {}), page === "notifications" && _jsx(NotificationsPage, { notices: notices, markAll: markAll, openNotice: openNotice })] })] }), toast && _jsxs("div", { className: "toast", children: [_jsx("i", { children: "\u2713" }), _jsxs("div", { children: [_jsx("b", { children: "Success" }), _jsx("span", { children: toast })] })] }), modal === "request" && _jsx(Modal, { title: "Send Document Request", onClose: () => setModal(null), action: () => setModal("requestConfirm"), actionLabel: "Send Request", children: _jsxs("div", { className: "modal-summary request-form", children: [_jsxs("label", { children: ["Program", _jsxs("div", { className: "request-input readonly", children: [_jsx(UiIcon, { name: "academic" }), _jsx("span", { children: "Bachelor of Science in Information Technology" })] })] }), _jsxs("label", { children: ["Requirement", _jsxs("div", { className: `request-input ${requestRequirementLocked ? "readonly" : ""}`, children: [_jsx(UiIcon, { name: "checklist" }), _jsx("select", { value: requestRequirement, disabled: requestRequirementLocked, onChange: e => setRequestRequirement(e.target.value), children: [...requirements.map(r => r.name), ...addedRequirements.map(r => r.name)].map(name => _jsx("option", { children: name }, name)) })] }), requestRequirementLocked && _jsx("small", { className: "locked-field-note", children: "Automatically selected from the current requirement." })] }), _jsxs("label", { children: ["Request From", _jsxs("div", { className: "request-person-input", children: [_jsxs("i", { children: [requestRecipient.split(" ")[0][0], requestRecipient.split(" ")[1]?.[0]] }), _jsxs("select", { value: requestRecipient, onChange: e => setRequestRecipient(e.target.value), children: [_jsx("option", { children: "Rizal Lim \u2014 Office Representative" }), _jsx("option", { children: "Maria Santos \u2014 Program Head" }), _jsx("option", { children: "Ramon Castillo \u2014 Dean" }), _jsx("option", { children: "Ana Reyes \u2014 Faculty" }), _jsx("option", { children: "Juan Dela Cruz \u2014 Faculty" })] })] })] }), _jsxs("label", { children: ["Remarks / Instructions", _jsxs("div", { className: "remarks-field", children: [_jsx("textarea", { maxLength: 500, value: requestRemarks, onChange: e => setRequestRemarks(e.target.value) }), _jsxs("span", { children: [requestRemarks.length, " / 500"] })] })] }), _jsxs("label", { children: ["Attachments (Optional)", requestFile ? _jsxs("span", { className: "uploaded-file", children: [_jsx("i", { children: _jsx(UiIcon, { name: "file" }) }), _jsxs("span", { children: [_jsx("b", { children: requestFile.name }), _jsxs("small", { children: [(requestFile.size / 1024 / 1024).toFixed(1), " MB"] })] }), _jsx("button", { type: "button", onClick: () => setRequestFile(null), children: "Remove \u00D7" })] }) : _jsxs("span", { className: "upload-drop", children: [_jsx(UiIcon, { name: "upload" }), _jsxs("span", { children: [_jsx("b", { children: "Click to upload" }), " or drag and drop", _jsx("small", { children: "PDF, DOC, DOCX, JPG, PNG \u2022 Max 10MB" })] }), _jsx("input", { type: "file", accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png", onChange: e => {
-            const file = e.target.files?.[0];
-            if (!file) return;
-            const allowed = /\.(pdf|doc|docx|jpg|jpeg|png)$/i.test(file.name);
-            if (!allowed || file.size > 10 * 1024 * 1024) {
-                setRequestFile(null);
-                e.target.value = "";
-                setToast(!allowed ? "Unsupported file type. Use PDF, DOC, DOCX, JPG, or PNG." : "File exceeds the 10 MB limit.");
-                return;
+    setTimeout(() => setToast(""), 3000);
+  };
+
+  const markAll = () =>
+    setNotices((items) => items.map((n) => ({ ...n, read: true })));
+
+  const openNotice = (notice) => {
+    setNotices((items) =>
+      items.map((n) => (n.id === notice.id ? { ...n, read: true } : n))
+    );
+    setNotify(false);
+    setPage(notice.target);
+  };
+
+  if (!logged) {
+    return <Login onLogin={(role, email) => login(role, email)} />;
+  }
+
+  const currentRequirementName =
+    initialRequirements[selectedRequirement]?.name ||
+    addedRequirements[selectedRequirement - initialRequirements.length]?.name ||
+    "";
+
+  return (
+    <div className="app">
+      <Header
+        role={currentRole}
+        notify={notify}
+        onNotify={() => setNotify(!notify)}
+        onLogout={() => setModal("logout")}
+        onSettings={() => setPage("settings")}
+        notices={notices}
+        markAll={markAll}
+        openNotice={openNotice}
+        viewAll={() => {
+          setNotify(false);
+          setPage("notifications");
+        }}
+      />
+
+      <Sidebar role={currentRole} page={page} setPage={setPage} />
+
+      <main className="content">
+        <div className="page-view" key={page}>
+          {page === "dashboard" &&
+            (currentRole === "COPC Coordinator" ? (
+              <CoordinatorDashboard setPage={setPage} />
+            ) : (
+              <UserDashboard role={currentRole} setPage={setPage} />
+            ))}
+
+          {page === "requirements" && (
+            <Requirements
+              addedRequirements={addedRequirements}
+              openAdd={() => setModal("addRequirement")}
+              openRequirement={(index) => {
+                setSelectedRequirement(index);
+                setPage("requirementDetail");
+              }}
+            />
+          )}
+
+          {page === "requirementDetail" && (
+            <RequirementDetails
+              index={selectedRequirement}
+              setPage={setPage}
+              openRequest={() => {
+                setRequestRequirement(currentRequirementName);
+                setRequestRequirementLocked(true);
+                setModal("request");
+              }}
+              openAddRecord={() => setModal("addRecord")}
+              openRecord={(record) => {
+                setSelectedRecord(record);
+                setPage("recordDetail");
+              }}
+              addedRecords={addedRecords}
+              addedRequirements={addedRequirements}
+            />
+          )}
+
+          {page === "recordDetail" && (
+            <RecordDetails
+              setPage={setPage}
+              openRevision={() => setModal("revision")}
+              openApprove={() => setModal("approve")}
+              record={selectedRecord}
+              parentRequirement={currentRequirementName}
+            />
+          )}
+
+          {page === "requests" && <Requests setPage={setPage} />}
+          {page === "requestDetail" && <RequestDetail setPage={setPage} />}
+
+          {page === "documents" && (
+            <Documents
+              openDocument={(index) => {
+                setSelectedDocument(index);
+                setPage("documentDetail");
+              }}
+            />
+          )}
+
+          {page === "representatives" && (
+            <Representatives
+              addedRepresentatives={addedRepresentatives}
+              openAddRepresentative={() => setModal("addRepresentative")}
+            />
+          )}
+
+          {page === "documentDetail" && (
+            <DocumentDetails
+              index={selectedDocument}
+              setPage={setPage}
+              openRevision={() => setModal("revision")}
+              openApprove={() => setModal("approve")}
+            />
+          )}
+
+          {page === "review" && (
+            <Review
+              setPage={setPage}
+              openRevision={() => setModal("revision")}
+              openApprove={() => setModal("approve")}
+            />
+          )}
+
+          {page === "reports" && <Reports />}
+          {page === "settings" && <Settings />}
+
+          {page === "notifications" && (
+            <NotificationsPage
+              notices={notices}
+              markAll={markAll}
+              openNotice={openNotice}
+            />
+          )}
+        </div>
+      </main>
+
+      {toast && (
+        <div className="toast">
+          <i>✓</i>
+          <div>
+            <b>Success</b>
+            <span>{toast}</span>
+          </div>
+        </div>
+      )}
+
+      {modal === "request" && (
+        <Modal
+          title="Send Document Request"
+          onClose={() => setModal(null)}
+          action={() => setModal("requestConfirm")}
+          actionLabel="Send Request"
+        >
+          <div className="modal-summary request-form">
+            <label>
+              Program
+              <div className="request-input readonly">
+                <UiIcon name="academic" />
+                <span>Bachelor of Science in Information Technology</span>
+              </div>
+            </label>
+
+            <label>
+              Requirement
+              <div
+                className={`request-input ${requestRequirementLocked ? "readonly" : ""}`}
+              >
+                <UiIcon name="checklist" />
+                <select
+                  value={requestRequirement}
+                  disabled={requestRequirementLocked}
+                  onChange={(e) => setRequestRequirement(e.target.value)}
+                >
+                  {[
+                    ...initialRequirements.map((r) => r.name),
+                    ...addedRequirements.map((r) => r.name),
+                  ].map((name) => (
+                    <option key={name}>{name}</option>
+                  ))}
+                </select>
+              </div>
+              {requestRequirementLocked && (
+                <small className="locked-field-note">
+                  Automatically selected from the current requirement.
+                </small>
+              )}
+            </label>
+
+            <label>
+              Request From
+              <div className="request-person-input">
+                <i>
+                  {requestRecipient.split(" ")[0]?.[0]}
+                  {requestRecipient.split(" ")[1]?.[0]}
+                </i>
+                <select
+                  value={requestRecipient}
+                  onChange={(e) => setRequestRecipient(e.target.value)}
+                >
+                  <option>Rizal Lim — Office Representative</option>
+                  <option>Maria Santos — Program Head</option>
+                  <option>Ramon Castillo — Dean</option>
+                  <option>Ana Reyes — Faculty</option>
+                  <option>Juan Dela Cruz — Faculty</option>
+                </select>
+              </div>
+            </label>
+
+            <label>
+              Remarks / Instructions
+              <div className="remarks-field">
+                <textarea
+                  maxLength={500}
+                  value={requestRemarks}
+                  onChange={(e) => setRequestRemarks(e.target.value)}
+                />
+                <span>{requestRemarks.length} / 500</span>
+              </div>
+            </label>
+
+            <label>
+              Attachments (Optional)
+              {requestFile ? (
+                <span className="uploaded-file">
+                  <i>
+                    <UiIcon name="file" />
+                  </i>
+                  <span>
+                    <b>{requestFile.name}</b>
+                    <small>
+                      {(requestFile.size / 1024 / 1024).toFixed(1)} MB
+                    </small>
+                  </span>
+                  <button type="button" onClick={() => setRequestFile(null)}>
+                    Remove ×
+                  </button>
+                </span>
+              ) : (
+                <span className="upload-drop">
+                  <UiIcon name="upload" />
+                  <span>
+                    <b>Click to upload</b> or drag and drop
+                    <small>PDF, DOC, DOCX, JPG, PNG • Max 10MB</small>
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const allowed = /\.(pdf|doc|docx|jpg|jpeg|png)$/i.test(
+                        file.name
+                      );
+                      if (!allowed || file.size > 10 * 1024 * 1024) {
+                        setRequestFile(null);
+                        e.target.value = "";
+                        setToast(
+                          !allowed
+                            ? "Unsupported file type. Use PDF, DOC, DOCX, JPG, or PNG."
+                            : "File exceeds the 10 MB limit."
+                        );
+                        return;
+                      }
+                      setRequestFile(file);
+                    }}
+                  />
+                </span>
+              )}
+            </label>
+          </div>
+        </Modal>
+      )}
+
+      {modal === "requestConfirm" && (
+        <Modal
+          title="Send Document Request?"
+          onClose={() => setModal("request")}
+          action={() =>
+            done(
+              `Document request sent successfully — ${requestRequirement} was requested from ${requestRecipient.split(" — ")[0]}.`,
+              "requests"
+            )
+          }
+          actionLabel="Confirm & Send"
+        >
+          <p>
+            You are about to request <b>“{requestRequirement}”</b> from{" "}
+            <b>{requestRecipient.replace(" — ", " (")})</b>.
+          </p>
+          <p className="confirmation-note">
+            The recipient will receive a notification and the request will be
+            recorded in the system.
+          </p>
+        </Modal>
+      )}
+
+      {modal === "addRequirement" && (
+        <Modal
+          title="Add COPC Requirement"
+          onClose={() => setModal(null)}
+          action={() => setModal("addRequirementConfirm")}
+          actionLabel="Continue"
+        >
+          <p className="modal-subtitle">
+            Create a new requirement for the program.
+          </p>
+          <div className="form-grid modal-form">
+            <label>
+              Requirement Name *
+              <input
+                value={newReq.name}
+                onChange={(e) => setNewReq({ ...newReq, name: e.target.value })}
+              />
+            </label>
+            <label>
+              Category *
+              <select
+                value={newReq.category}
+                onChange={(e) =>
+                  setNewReq({ ...newReq, category: e.target.value })
+                }
+              >
+                {categoryOptions.map((x) => (
+                  <option key={x}>{x}</option>
+                ))}
+              </select>
+            </label>
+            <label className="full">
+              Description *
+              <textarea
+                value={newReq.description}
+                onChange={(e) =>
+                  setNewReq({ ...newReq, description: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Responsible Personnel / Office
+              <select
+                value={newReq.responsible}
+                onChange={(e) =>
+                  setNewReq({ ...newReq, responsible: e.target.value })
+                }
+              >
+                <option>Program Head</option>
+                <option>Faculty</option>
+                <option>Office Representative</option>
+                <option>Dean</option>
+              </select>
+            </label>
+            <label>
+              Academic Year *
+              <select
+                value={newReq.year}
+                onChange={(e) => setNewReq({ ...newReq, year: e.target.value })}
+              >
+                <option>2026–2027</option>
+                <option>2025–2026</option>
+              </select>
+            </label>
+          </div>
+        </Modal>
+      )}
+
+      {modal === "addRequirementConfirm" && (
+        <Modal
+          title="Create Requirement?"
+          onClose={() => setModal("addRequirement")}
+          action={() => {
+            if (newReq.name) {
+              setAddedRequirements((x) => [...x, newReq]);
+              done(`${newReq.name} was created successfully.`, "requirements");
             }
-            setRequestFile(file);
-        } })] })] })] }) }), modal === "requestConfirm" && _jsxs(Modal, { title: "Send Document Request?", onClose: () => setModal("request"), action: () => done(`Document request sent successfully — ${requestRequirement} was requested from ${requestRecipient.split(" — ")[0]}.`, "requests"), actionLabel: "Confirm & Send", children: [_jsxs("p", { children: ["You are about to request ", _jsxs("b", { children: ["\u201C", requestRequirement, "\u201D"] }), " from ", _jsxs("b", { children: [requestRecipient.replace(" — ", " ("), ")"] }), "."] }), _jsx("p", { className: "confirmation-note", children: "The recipient will receive a notification and the request will be recorded in the system." })] }), modal === "addRequirement" && _jsxs(Modal, { title: "Add COPC Requirement", onClose: () => setModal(null), action: () => setModal("addRequirementConfirm"), actionLabel: "Continue", children: [_jsx("p", { className: "modal-subtitle", children: "Create a new requirement for the program." }), _jsxs("div", { className: "form-grid modal-form", children: [_jsxs("label", { children: ["Requirement Name *", _jsx("input", { value: newReq.name, onChange: e => setNewReq({ ...newReq, name: e.target.value }) })] }), _jsxs("label", { children: ["Category *", _jsx("select", { value: newReq.category, onChange: e => setNewReq({ ...newReq, category: e.target.value }), children: ["Faculty", "Curriculum", "Facilities", "Library", "Research", "Student Records", "Other"].map(x => _jsx("option", { children: x }, x)) })] }), _jsxs("label", { className: "full", children: ["Description *", _jsx("textarea", { value: newReq.description, onChange: e => setNewReq({ ...newReq, description: e.target.value }) })] }), _jsxs("label", { children: ["Responsible Personnel / Office", _jsxs("select", { value: newReq.responsible, onChange: e => setNewReq({ ...newReq, responsible: e.target.value }), children: [_jsx("option", { children: "Program Head" }), _jsx("option", { children: "Faculty" }), _jsx("option", { children: "Office Representative" }), _jsx("option", { children: "Dean" })] })] }), _jsxs("label", { children: ["Academic Year *", _jsxs("select", { value: newReq.year, onChange: e => setNewReq({ ...newReq, year: e.target.value }), children: [_jsx("option", { children: "2026\u20132027" }), _jsx("option", { children: "2025\u20132026" })] })] })] })] }), modal === "addRequirementConfirm" && _jsx(Modal, {
-            title: "Create Requirement?", onClose: () => setModal("addRequirement"), action: () => {
-                if (newReq.name) {
-                    setAddedRequirements(x => [...x, newReq]);
-                    done(`${newReq.name} was created successfully.`, "requirements");
+          }}
+          actionLabel="Create Requirement"
+        >
+          <p>
+            You are about to add{" "}
+            <b>“{newReq.name || "this requirement"}”</b> as a new COPC
+            requirement for Bachelor of Science in Information Technology.
+          </p>
+        </Modal>
+      )}
+
+      {modal === "addRecord" && (
+        <Modal
+          title="Add Required Record"
+          onClose={() => setModal(null)}
+          action={() => setModal("addRecordConfirm")}
+          actionLabel="Continue"
+        >
+          <div className="form-grid modal-form">
+            <label className="full">
+              Parent Requirement
+              <input value={currentRequirementName} readOnly />
+            </label>
+            <label>
+              Required Record Name *
+              <input
+                value={newRecord.name}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, name: e.target.value })
                 }
-            }, actionLabel: "Create Requirement", children: _jsxs("p", { children: ["You are about to add ", _jsxs("b", { children: ["\u201C", newReq.name || "this requirement", "\u201D"] }), " as a new COPC requirement for Bachelor of Science in Information Technology."] })
-        }), modal === "addRecord" && _jsx(Modal, { title: "Add Required Record", onClose: () => setModal(null), action: () => setModal("addRecordConfirm"), actionLabel: "Continue", children: _jsxs("div", { className: "form-grid modal-form", children: [_jsxs("label", { className: "full", children: ["Parent Requirement", _jsx("input", { value: requirements[selectedRequirement]?.name || "", readOnly: true })] }), _jsxs("label", { children: ["Required Record Name *", _jsx("input", { value: newRecord.name, onChange: e => setNewRecord({ ...newRecord, name: e.target.value }) })] }), _jsxs("label", { children: ["Requirement Type", _jsxs("select", { value: newRecord.type, onChange: e => setNewRecord({ ...newRecord, type: e.target.value }), children: [_jsx("option", { children: "Required" }), _jsx("option", { children: "Optional" })] })] }), _jsxs("label", { className: "full", children: ["Description *", _jsx("textarea", { value: newRecord.description, onChange: e => setNewRecord({ ...newRecord, description: e.target.value }) })] }), _jsxs("label", { children: ["Responsible Personnel / Office", _jsxs("select", { value: newRecord.responsible, onChange: e => setNewRecord({ ...newRecord, responsible: e.target.value }), children: [_jsx("option", { value: "", children: "Unassigned" }), _jsx("option", { children: "Maria Santos \u2014 Program Head" }), _jsx("option", { children: "Ana Reyes \u2014 Faculty" }), _jsx("option", { children: "Rizal Lim \u2014 Office Representative" })] })] }), _jsxs("label", { children: ["Status", _jsxs("select", { children: [_jsx("option", { children: "Active" }), _jsx("option", { children: "Inactive" })] })] })] }) }), modal === "addRecordConfirm" && _jsx(Modal, {
-            title: "Add Required Record?", onClose: () => setModal("addRecord"), action: () => {
-                if (newRecord.name) {
-                    setAddedRecords(x => [...x, newRecord]);
-                    done(`${newRecord.name} was added successfully.`, "requirementDetail");
+              />
+            </label>
+            <label>
+              Requirement Type
+              <select
+                value={newRecord.type}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, type: e.target.value })
                 }
-            }, actionLabel: "Add Required Record", children: _jsxs("p", { children: ["You are about to add ", _jsxs("b", { children: ["\u201C", newRecord.name || "this record", "\u201D"] }), " under Faculty Information."] })
-        }), modal === "revision" && _jsxs(Modal, { title: "Send revision request?", onClose: () => setModal(null), action: () => done("Revision request submitted.", "requests"), actionLabel: "Send revision request", children: [_jsxs("div", { className: "modal-doc", children: [_jsx("b", { children: "Selected requirement" }), _jsx("span", { children: "Faculty_Information_BSIT_v2.pdf \u00B7 Submitted by Juan Dela Cruz" })] }), _jsxs("label", { children: ["Revision remarks *", _jsx("textarea", { defaultValue: "" })] }), _jsx("div", { className: "warning", children: "This records the coordinator as the revision requester. The person who uploads the corrected file will be recorded as \u201CRevised By.\u201D" })] }), modal === "approve" && _jsxs(Modal, { title: "Approve document?", onClose: () => setModal(null), action: () => done("Document approved as an internal COPC requirement.", "documents"), actionLabel: "Confirm approval", children: [_jsx("p", { children: "You are about to approve this document as a completed COPC requirement for Bachelor of Science in Information Technology." }), _jsx("div", { className: "approve-summary", children: [["Requirement", ""], ["Document", ""], ["Submitted by", ""], ["Current version", ""]].map(x => _jsxs("div", { children: [_jsx("span", { children: x[0] }), _jsx("b", { children: x[1] })] }, x[0])) }), _jsxs("label", { children: ["Approval remarks (optional)", _jsx("textarea", { "aria-label": "Add an internal approval note" })] }), _jsx("div", { className: "warning", children: "This is an internal document workflow decision. It does not indicate that CHED has granted a COPC." })] }), modal === "logout" && _jsx(Modal, { title: "Log Out?", onClose: () => setModal(null), action: () => { setModal(null); setLogged(false); setPage("dashboard"); }, actionLabel: "Log Out", children: _jsx("p", { children: "Are you sure you want to log out of the COPC Record Management System?" }) })]
-    });
+              >
+                <option>Required</option>
+                <option>Optional</option>
+              </select>
+            </label>
+            <label className="full">
+              Description *
+              <textarea
+                value={newRecord.description}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, description: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Responsible Personnel / Office
+              <select
+                value={newRecord.responsible}
+                onChange={(e) =>
+                  setNewRecord({ ...newRecord, responsible: e.target.value })
+                }
+              >
+                <option value="">Unassigned</option>
+                <option>Maria Santos — Program Head</option>
+                <option>Ana Reyes — Faculty</option>
+                <option>Rizal Lim — Office Representative</option>
+              </select>
+            </label>
+            <label>
+              Status
+              <select>
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </label>
+          </div>
+        </Modal>
+      )}
+
+      {modal === "addRecordConfirm" && (
+        <Modal
+          title="Add Required Record?"
+          onClose={() => setModal("addRecord")}
+          action={() => {
+            if (newRecord.name) {
+              setAddedRecords((x) => [...x, newRecord]);
+              done(
+                `${newRecord.name} was added successfully.`,
+                "requirementDetail"
+              );
+            }
+          }}
+          actionLabel="Add Required Record"
+        >
+          <p>
+            You are about to add{" "}
+            <b>“{newRecord.name || "this record"}”</b> under Faculty
+            Information.
+          </p>
+        </Modal>
+      )}
+
+      {modal === "revision" && (
+        <Modal
+          title="Send revision request?"
+          onClose={() => setModal(null)}
+          action={() => done("Revision request submitted.", "requests")}
+          actionLabel="Send revision request"
+        >
+          <div className="modal-doc">
+            <b>Selected requirement</b>
+            <span>
+              Faculty_Information_BSIT_v2.pdf · Submitted by Juan Dela Cruz
+            </span>
+          </div>
+          <label>
+            Revision remarks *
+            <textarea defaultValue="" />
+          </label>
+          <div className="warning">
+            This records the coordinator as the revision requester. The person
+            who uploads the corrected file will be recorded as “Revised By.”
+          </div>
+        </Modal>
+      )}
+
+      {modal === "approve" && (
+        <Modal
+          title="Approve document?"
+          onClose={() => setModal(null)}
+          action={() =>
+            done(
+              "Document approved as an internal COPC requirement.",
+              "documents"
+            )
+          }
+          actionLabel="Confirm approval"
+        >
+          <p>
+            You are about to approve this document as a completed COPC
+            requirement for Bachelor of Science in Information Technology.
+          </p>
+          <div className="approve-summary">
+            {[
+              ["Requirement", ""],
+              ["Document", ""],
+              ["Submitted by", ""],
+              ["Current version", ""],
+            ].map((x) => (
+              <div key={x[0]}>
+                <span>{x[0]}</span>
+                <b>{x[1]}</b>
+              </div>
+            ))}
+          </div>
+          <label>
+            Approval remarks (optional)
+            <textarea aria-label="Add an internal approval note" />
+          </label>
+          <div className="warning">
+            This is an internal document workflow decision. It does not indicate
+            that CHED has granted a COPC.
+          </div>
+        </Modal>
+      )}
+
+      {modal === "logout" && (
+        <Modal
+          title="Log Out?"
+          onClose={() => setModal(null)}
+          action={() => {
+            setModal(null);
+            logout();
+            setPage("dashboard");
+          }}
+          actionLabel="Log Out"
+        >
+          <p>
+            Are you sure you want to log out of the COPC Record Management
+            System?
+          </p>
+        </Modal>
+      )}
+
+      {modal === "addRepresentative" && (
+        <Modal
+          title="Add Representative"
+          onClose={() => setModal(null)}
+          action={() => {
+            if (newRep.name) {
+              setAddedRepresentatives((x) => [...x, newRep]);
+              setNewRep({
+                name: "",
+                office: "",
+                program: "Information Technology",
+                email: "",
+                contact: "",
+                status: "Active",
+              });
+              done("Representative was added successfully.", "representatives");
+            }
+          }}
+          actionLabel="Add Representative"
+        >
+          <div className="form-grid modal-form">
+            <label>
+              Representative Name *
+              <input
+                value={newRep.name}
+                onChange={(e) => setNewRep({ ...newRep, name: e.target.value })}
+              />
+            </label>
+            <label>
+              Office Name *
+              <input
+                value={newRep.office}
+                onChange={(e) =>
+                  setNewRep({ ...newRep, office: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Program
+              <input
+                value={newRep.program}
+                onChange={(e) =>
+                  setNewRep({ ...newRep, program: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Email *
+              <input
+                type="email"
+                value={newRep.email}
+                onChange={(e) =>
+                  setNewRep({ ...newRep, email: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Contact Number
+              <input
+                value={newRep.contact}
+                onChange={(e) =>
+                  setNewRep({ ...newRep, contact: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Status
+              <select
+                value={newRep.status}
+                onChange={(e) =>
+                  setNewRep({ ...newRep, status: e.target.value })
+                }
+              >
+                <option>Active</option>
+                <option>Inactive</option>
+              </select>
+            </label>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
 }
+
 export default App;

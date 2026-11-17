@@ -2,11 +2,11 @@ import { useState } from "react";
 import {
   initialRequirements,
   recordsByRequirement,
-} from "../api/CopcViewAPI/requirement.api";
-import Badge from "../components/ui/Badge";
-import PageHead from "../components/ui/PageHead";
-import UiIcon from "../components/ui/UiIcon";
-import DocumentDetails from "./DocumentDetails";
+} from "../../api/CopcViewAPI/requirement.api";
+import Badge from "../../components/ui/Badge";
+import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
+import DocumentDetails from "../SharedPage/DocumentDetails";
 
 export function RequirementDetails({
   index,

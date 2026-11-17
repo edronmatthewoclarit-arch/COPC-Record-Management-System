@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Seal from "../ui/Seal";
 import UiIcon from "../ui/UiIcon";
 
@@ -13,7 +12,6 @@ export function Header({
   openNotice,
   viewAll,
 }) {
-  const [profileOpen, setProfileOpen] = useState(false);
   const user = { name: "Account", initials: "U" };
   const unreadCount = notices.filter((n) => !n.read).length;
 
@@ -41,30 +39,26 @@ export function Header({
         </button>
 
         <button
-          className="profile-trigger"
-          onClick={() => setProfileOpen(!profileOpen)}
+          className="settings-trigger"
+          aria-label="Settings"
+          title="Settings"
+          onClick={onSettings}
         >
+          <UiIcon name="settings" />
+        </button>
+
+        <div className="profile-trigger">
           <div className="avatar">{user.initials}</div>
           <div>
             <b>{role}</b>
             <span>{user.name}</span>
           </div>
-        </button>
+        </div>
 
         <button className="logout" aria-label="Log out" onClick={onLogout}>
           <UiIcon name="logout" />
         </button>
       </div>
-
-      {profileOpen && (
-        <div className="profile-menu">
-          <b>{user.name}</b>
-          <span>{role}</span>
-          <button onClick={onSettings}>View Profile</button>
-          <button onClick={onSettings}>Account Settings</button>
-          <button onClick={onLogout}>Log Out</button>
-        </div>
-      )}
 
       {notify && (
         <div className="notifications">

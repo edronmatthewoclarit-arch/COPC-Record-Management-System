@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { initialRepresentatives } from "../api/CopcViewAPI/representative.api";
-import PageHead from "../components/ui/PageHead";
-import UiIcon from "../components/ui/UiIcon";
+import { initialRepresentatives } from "../../api/CopcViewAPI/representative.api";
+import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
 
 export function Representatives({
   addedRepresentatives = [],

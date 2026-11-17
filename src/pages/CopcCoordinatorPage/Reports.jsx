@@ -1,6 +1,6 @@
-import PageHead from "../components/ui/PageHead";
-import Stat from "../components/ui/Stat";
-import UiIcon from "../components/ui/UiIcon";
+import PageHead from "../../components/ui/PageHead";
+import Stat from "../../components/ui/Stat";
+import UiIcon from "../../components/ui/UiIcon";
 
 export function Reports() {
   const barChartItems = [];

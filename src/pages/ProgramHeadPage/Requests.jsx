@@ -1,8 +1,18 @@
-import { initialRequests } from "../api/CopcViewAPI/document.api";
-import Badge from "../components/ui/Badge";
-import PageHead from "../components/ui/PageHead";
+import { useState } from "react";
+import { initialProgramHeadRequests } from "../../api/ProgramHeadViewAPI/request.api";
+import Badge from "../../components/ui/Badge";
+import PageHead from "../../components/ui/PageHead";
 
 export function Requests({ setPage }) {
+  const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("All");
+
+  const filteredRequests = initialProgramHeadRequests.filter(
+    (r) =>
+      `${r[0]} ${r[1]} ${r[2]}`.toLowerCase().includes(query.toLowerCase()) &&
+      (activeTab === "All" || r[4] === activeTab)
+  );
+
   return (
     <>
       <PageHead
@@ -14,7 +24,12 @@ export function Requests({ setPage }) {
       <section className="card table-card">
         <div className="toolbar stacked">
           <div className="search">
-            ⌕ <input aria-label="Search requests" />
+            ⌕{" "}
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search requests"
+            />
           </div>
           <div className="tabs">
             {[
@@ -24,8 +39,12 @@ export function Requests({ setPage }) {
               "For Revision",
               "Resubmitted",
               "Approved",
-            ].map((x, i) => (
-              <button key={x} className={i === 0 ? "active" : ""}>
+            ].map((x) => (
+              <button
+                key={x}
+                className={activeTab === x ? "active" : ""}
+                onClick={() => setActiveTab(x)}
+              >
                 {x}
               </button>
             ))}
@@ -44,7 +63,7 @@ export function Requests({ setPage }) {
             </tr>
           </thead>
           <tbody>
-            {initialRequests.map((r) => (
+            {filteredRequests.map((r) => (
               <tr
                 key={r[0]}
                 className="clickable-row"

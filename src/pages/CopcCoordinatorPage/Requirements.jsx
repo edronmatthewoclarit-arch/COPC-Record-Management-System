@@ -5,9 +5,9 @@ import {
   recordsByRequirement,
   requirementDescriptions,
   roleOptions,
-} from "../api/CopcViewAPI/requirement.api";
-import PageHead from "../components/ui/PageHead";
-import UiIcon from "../components/ui/UiIcon";
+} from "../../api/CopcViewAPI/requirement.api";
+import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
 
 export function Requirements({
   openRequirement,

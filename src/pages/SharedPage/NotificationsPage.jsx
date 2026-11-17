@@ -1,6 +1,6 @@
 import { useState } from "react";
-import PageHead from "../components/ui/PageHead";
-import UiIcon from "../components/ui/UiIcon";
+import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
 
 export function NotificationsPage({ notices, markAll, openNotice }) {
   const [query, setQuery] = useState("");

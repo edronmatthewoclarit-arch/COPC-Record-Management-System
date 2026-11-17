@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { initialDocuments } from "../api/CopcViewAPI/document.api";
-import Badge from "../components/ui/Badge";
-import PageHead from "../components/ui/PageHead";
-import UiIcon from "../components/ui/UiIcon";
+import { initialDocuments } from "../../api/CopcViewAPI/document.api";
+import Badge from "../../components/ui/Badge";
+import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
 
 export function DocumentDetails({
   index,
@@ -19,17 +19,17 @@ export function DocumentDetails({
   const base = initialDocuments[index] || initialDocuments[0];
   const doc = record
     ? {
-        name: record.file || "",
-        size: record.size,
-        requirement: parentRequirement || "Faculty Information",
-        record: record.name,
-        uploader: record.assigned,
-        role: record.role,
-        date: record.updated.split(" • ")[0],
-        time: record.updated.split(" • ")[1] || "",
-        version: record.version,
-        status: record.status,
-      }
+      name: record.file || "",
+      size: record.size,
+      requirement: parentRequirement || "Faculty Information",
+      record: record.name,
+      uploader: record.assigned,
+      role: record.role,
+      date: record.updated.split(" • ")[0],
+      time: record.updated.split(" • ")[1] || "",
+      version: record.version,
+      status: record.status,
+    }
     : base;
 
   if (!doc) {

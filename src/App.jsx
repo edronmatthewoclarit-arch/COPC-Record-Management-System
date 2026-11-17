@@ -1,5 +1,5 @@
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { initialNotices } from "./api/CopcViewAPI/document.api";
 import { categoryOptions, initialRequirements } from "./api/CopcViewAPI/requirement.api";
 import Header from "./components/layout/Header";
@@ -7,22 +7,32 @@ import Sidebar from "./components/layout/Sidebar";
 import Modal from "./components/ui/Modal";
 import UiIcon from "./components/ui/UiIcon";
 import { useAuth } from "./context/AuthContext";
-import CoordinatorDashboard from "./pages/CoordinatorDashboard";
-import DocumentDetails from "./pages/DocumentDetails";
-import Documents from "./pages/Documents";
-import Login from "./pages/Login";
-import NotificationsPage from "./pages/NotificationsPage";
-import Reports from "./pages/Reports";
-import Representatives from "./pages/Representatives";
-import Requests, { RequestDetail } from "./pages/Requests";
-import RequirementDetails, { RecordDetails } from "./pages/RequirementDetails";
-import Requirements from "./pages/Requirements";
-import Review from "./pages/Review";
-import Settings from "./pages/Settings";
-import UserDashboard from "./pages/UserDashboard";
+import CoordinatorDashboard from "./pages/CopcCoordinatorPage/CoordinatorDashboard";
+import DocumentDetails from "./pages/SharedPage/DocumentDetails";
+import Documents from "./pages/SharedPage/Documents";
+import Login from "./pages/AuthPage/Login";
+import LogoutModal from "./pages/AuthPage/LogoutModal";
+import NotificationsPage from "./pages/SharedPage/NotificationsPage";
+import Reports from "./pages/CopcCoordinatorPage/Reports";
+import Representatives from "./pages/CopcCoordinatorPage/Representatives";
+import Requests, { RequestDetail } from "./pages/ProgramHeadPage/Requests";
+import RequirementDetails, { RecordDetails } from "./pages/CopcCoordinatorPage/RequirementDetails";
+import Requirements from "./pages/CopcCoordinatorPage/Requirements";
+import Review from "./pages/CopcCoordinatorPage/Review";
+import Settings from "./pages/SharedPage/Settings";
+import UserDashboard from "./pages/ProgramHeadPage/UserDashboard";
 
 export function App() {
-  const { logged, currentRole, login, logout } = useAuth();
+  const { logged, currentRole, user, login, logout } = useAuth();
+
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("copc-theme") || "light"
+  );
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("copc-theme", theme);
+  }, [theme]);
 
   const [page, setPage] = useState("dashboard");
   const [notify, setNotify] = useState(false);
@@ -205,7 +215,15 @@ export function App() {
           )}
 
           {page === "reports" && <Reports />}
-          {page === "settings" && <Settings />}
+          {page === "settings" && (
+            <Settings
+              role={currentRole}
+              user={user}
+              theme={theme}
+              setTheme={setTheme}
+              onSaveToast={done}
+            />
+          )}
 
           {page === "notifications" && (
             <NotificationsPage
@@ -620,21 +638,14 @@ export function App() {
       )}
 
       {modal === "logout" && (
-        <Modal
-          title="Log Out?"
+        <LogoutModal
           onClose={() => setModal(null)}
-          action={() => {
+          onConfirm={() => {
             setModal(null);
             logout();
             setPage("dashboard");
           }}
-          actionLabel="Log Out"
-        >
-          <p>
-            Are you sure you want to log out of the COPC Record Management
-            System?
-          </p>
-        </Modal>
+        />
       )}
 
       {modal === "addRepresentative" && (
@@ -701,18 +712,6 @@ export function App() {
                   setNewRep({ ...newRep, contact: e.target.value })
                 }
               />
-            </label>
-            <label>
-              Status
-              <select
-                value={newRep.status}
-                onChange={(e) =>
-                  setNewRep({ ...newRep, status: e.target.value })
-                }
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
             </label>
           </div>
         </Modal>

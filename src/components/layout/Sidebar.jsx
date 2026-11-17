@@ -5,14 +5,12 @@ const coordinatorNav = [
   { id: "requirements", label: "Requirements", icon: "checklist" },
   { id: "documents", label: "Documents", icon: "file" },
   { id: "representatives", label: "Representative", icon: "users" },
-  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 const userNav = [
   { id: "dashboard", label: "Dashboard", icon: "home" },
   { id: "requests", label: "My Requests", icon: "send" },
   { id: "documents", label: "My Documents", icon: "file" },
-  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 export function Sidebar({ page, setPage, role }) {

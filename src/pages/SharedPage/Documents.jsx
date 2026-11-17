@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { initialDocuments } from "../api/CopcViewAPI/document.api";
-import Badge from "../components/ui/Badge";
-import PageHead from "../components/ui/PageHead";
-import UiIcon from "../components/ui/UiIcon";
+import { initialDocuments } from "../../api/CopcViewAPI/document.api";
+import Badge from "../../components/ui/Badge";
+import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
 
 export function Documents({ openDocument }) {
   const [query, setQuery] = useState("");

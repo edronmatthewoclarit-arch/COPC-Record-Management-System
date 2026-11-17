@@ -1,9 +1,10 @@
-import PageHead from "../components/ui/PageHead";
-import UiIcon from "../components/ui/UiIcon";
+import { initialCoordinatorDashboard } from "../../api/CopcViewAPI/dashboard.api";
+import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
 
 export function CoordinatorDashboard({ setPage }) {
-  const recentActivities = [];
-  const documentUpdates = [];
+  const { progress, recentActivities, documentUpdates } =
+    initialCoordinatorDashboard;
 
   return (
     <>
@@ -26,7 +27,7 @@ export function CoordinatorDashboard({ setPage }) {
           <div className="progress-content">
             <div className="ring">
               <div>
-                <strong>0%</strong>
+                <strong>{progress.completionPercentage}%</strong>
                 <span>Completed</span>
               </div>
             </div>
@@ -35,22 +36,22 @@ export function CoordinatorDashboard({ setPage }) {
               <div>
                 <i className="navy" />
                 <span>Total Requirements</span>
-                <b>0</b>
+                <b>{progress.totalRequirements}</b>
               </div>
               <div>
                 <i className="green" />
                 <span>Approved</span>
-                <b>0</b>
+                <b>{progress.approved}</b>
               </div>
               <div>
                 <i className="amber" />
                 <span>Pending</span>
-                <b>0</b>
+                <b>{progress.pending}</b>
               </div>
               <div>
                 <i className="red" />
                 <span>For Revision</span>
-                <b>0</b>
+                <b>{progress.forRevision}</b>
               </div>
             </div>
           </div>

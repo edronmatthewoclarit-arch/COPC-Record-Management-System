@@ -1,42 +1,50 @@
+-- Force drop the existing schema and all its tables cleanly
+DROP SCHEMA IF EXISTS copc_schema CASCADE;
 
-USE copc_record_management;
+-- Create a brand new schema
+CREATE SCHEMA copc_schema;
+
+-- Set the search path
+SET search_path TO copc_schema, public;
+
+-- 0. Ensure schema exists and set search path
+CREATE SCHEMA IF NOT EXISTS copc_schema;
+SET search_path TO copc_schema, public;
 
 -- 1. Academic programs
-CREATE TABLE programs (
-    program_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.programs (
+    program_id SERIAL PRIMARY KEY,
     program_name VARCHAR(200) NOT NULL UNIQUE,
     degree_code VARCHAR(30),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. Users and accounts
-CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.users (
+    user_id SERIAL PRIMARY KEY,
     program_id INT NULL,
-    full_name VARCHAR(150) NOT NULL,
+    name VARCHAR(150) NOT NULL,
     email VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM(
+    role VARCHAR(50) NOT NULL CHECK (role IN (
         'COPC Coordinator',
         'Program Head',
         'Faculty',
         'Office Representative',
         'Dean'
-    ) NOT NULL,
+    )),
     profile_photo_path VARCHAR(500),
-    account_status ENUM('Active', 'Inactive')
-        NOT NULL DEFAULT 'Active',
+    account_status VARCHAR(20) NOT NULL DEFAULT 'Active' CHECK (account_status IN ('Active', 'Inactive')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (program_id)
-        REFERENCES programs(program_id)
+        REFERENCES copc_schema.programs(program_id)
         ON DELETE SET NULL
 );
 
 -- 3. COPC requirements
-CREATE TABLE requirements (
-    requirement_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.requirements (
+    requirement_id SERIAL PRIMARY KEY,
     requirement_name VARCHAR(150) NOT NULL UNIQUE,
     description TEXT,
     category VARCHAR(100) NOT NULL,
@@ -46,21 +54,21 @@ CREATE TABLE requirements (
 );
 
 -- 4. Individual requirement records
-CREATE TABLE requirement_records (
-    record_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.requirement_records (
+    record_id SERIAL PRIMARY KEY,
     requirement_id INT NOT NULL,
     record_name VARCHAR(200) NOT NULL,
     description TEXT,
     target_count INT NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (requirement_id)
-        REFERENCES requirements(requirement_id),
+        REFERENCES copc_schema.requirements(requirement_id),
     UNIQUE (requirement_id, record_name)
 );
 
 -- 5. Uploaded documents
-CREATE TABLE documents (
-    document_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.documents (
+    document_id SERIAL PRIMARY KEY,
     record_id INT NOT NULL,
     uploaded_by INT NOT NULL,
     previous_version_id INT NULL,
@@ -69,146 +77,144 @@ CREATE TABLE documents (
     file_type VARCHAR(50),
     file_size_bytes BIGINT,
     version_number INT NOT NULL DEFAULT 1,
-    status ENUM(
+    status VARCHAR(30) NOT NULL DEFAULT 'For Review' CHECK (status IN (
         'Requested',
         'For Review',
         'Approved',
         'For Revision',
         'Rejected'
-    ) NOT NULL DEFAULT 'For Review',
+    )),
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (record_id)
-        REFERENCES requirement_records(record_id),
+        REFERENCES copc_schema.requirement_records(record_id),
     FOREIGN KEY (uploaded_by)
-        REFERENCES users(user_id),
+        REFERENCES copc_schema.users(user_id),
     FOREIGN KEY (previous_version_id)
-        REFERENCES documents(document_id)
+        REFERENCES copc_schema.documents(document_id)
         ON DELETE SET NULL,
     UNIQUE (record_id, version_number)
 );
 
 -- 6. Document reviews
-CREATE TABLE document_reviews (
-    review_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.document_reviews (
+    review_id SERIAL PRIMARY KEY,
     document_id INT NOT NULL,
     reviewer_id INT NOT NULL,
-    decision ENUM(
+    decision VARCHAR(30) NOT NULL CHECK (decision IN (
         'Approved',
         'For Revision',
         'Rejected'
-    ) NOT NULL,
+    )),
     comments TEXT,
     reviewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (document_id)
-        REFERENCES documents(document_id),
+        REFERENCES copc_schema.documents(document_id),
     FOREIGN KEY (reviewer_id)
-        REFERENCES users(user_id)
+        REFERENCES copc_schema.users(user_id)
 );
 
 -- 7. Document requests
-CREATE TABLE document_requests (
-    request_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.document_requests (
+    request_id SERIAL PRIMARY KEY,
     requirement_id INT NOT NULL,
     record_id INT NULL,
     requested_by INT NOT NULL,
     assigned_to INT NULL,
     request_message TEXT,
     due_date DATE,
-    status ENUM(
+    status VARCHAR(30) NOT NULL DEFAULT 'Open' CHECK (status IN (
         'Open',
         'Submitted',
         'Completed',
         'Cancelled'
-    ) NOT NULL DEFAULT 'Open',
+    )),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (requirement_id)
-        REFERENCES requirements(requirement_id),
+        REFERENCES copc_schema.requirements(requirement_id),
     FOREIGN KEY (record_id)
-        REFERENCES requirement_records(record_id)
+        REFERENCES copc_schema.requirement_records(record_id)
         ON DELETE SET NULL,
     FOREIGN KEY (requested_by)
-        REFERENCES users(user_id),
+        REFERENCES copc_schema.users(user_id),
     FOREIGN KEY (assigned_to)
-        REFERENCES users(user_id)
+        REFERENCES copc_schema.users(user_id)
         ON DELETE SET NULL
 );
 
 -- 8. Notifications
-CREATE TABLE notifications (
-    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.notifications (
+    notification_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
     message TEXT NOT NULL,
-    notification_type ENUM(
+    notification_type VARCHAR(40) NOT NULL DEFAULT 'General' CHECK (notification_type IN (
         'Document Request',
         'Revision Request',
         'New Submission',
         'Document Approval',
         'General'
-    ) NOT NULL DEFAULT 'General',
+    )),
     related_document_id INT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+        REFERENCES copc_schema.users(user_id)
         ON DELETE CASCADE,
     FOREIGN KEY (related_document_id)
-        REFERENCES documents(document_id)
+        REFERENCES copc_schema.documents(document_id)
         ON DELETE SET NULL
 );
 
 -- 9. Dashboard activity logs
-CREATE TABLE activity_logs (
-    activity_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.activity_logs (
+    activity_id SERIAL PRIMARY KEY,
     user_id INT NULL,
     action VARCHAR(100) NOT NULL,
     description TEXT,
     related_document_id INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+        REFERENCES copc_schema.users(user_id)
         ON DELETE SET NULL,
     FOREIGN KEY (related_document_id)
-        REFERENCES documents(document_id)
+        REFERENCES copc_schema.documents(document_id)
         ON DELETE SET NULL
 );
 
 -- 10. Notification preferences
-CREATE TABLE user_notification_preferences (
-    preference_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.user_notification_preferences (
+    preference_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     document_requests BOOLEAN NOT NULL DEFAULT TRUE,
     revision_requests BOOLEAN NOT NULL DEFAULT TRUE,
     new_submissions BOOLEAN NOT NULL DEFAULT TRUE,
     document_approvals BOOLEAN NOT NULL DEFAULT TRUE,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+        REFERENCES copc_schema.users(user_id)
         ON DELETE CASCADE
 );
 
 -- 11. User display settings
-CREATE TABLE user_settings (
-    setting_id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE copc_schema.user_settings (
+    setting_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
-    theme ENUM('Light', 'Dark') NOT NULL DEFAULT 'Light',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        ON UPDATE CURRENT_TIMESTAMP,
+    theme VARCHAR(20) NOT NULL DEFAULT 'Light' CHECK (theme IN ('Light', 'Dark')),
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id)
-        REFERENCES users(user_id)
+        REFERENCES copc_schema.users(user_id)
         ON DELETE CASCADE
 );
 
 -- Indexes
 CREATE INDEX idx_documents_record
-    ON documents(record_id);
+    ON copc_schema.documents(record_id);
 
 CREATE INDEX idx_documents_status_date
-    ON documents(status, uploaded_at);
+    ON copc_schema.documents(status, uploaded_at);
 
 CREATE INDEX idx_notifications_user_read
-    ON notifications(user_id, is_read);
+    ON copc_schema.notifications(user_id, is_read);
 
 CREATE INDEX idx_activity_created
-    ON activity_logs(created_at);
+    ON copc_schema.activity_logs(created_at);

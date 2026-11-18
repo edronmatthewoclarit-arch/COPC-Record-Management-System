@@ -11,6 +11,13 @@ SET search_path TO copc_schema, public;
 CREATE SCHEMA IF NOT EXISTS copc_schema;
 SET search_path TO copc_schema, public;
 
+-- ==========================================
+-- COPC RMS Database Schema Updates
+-- ==========================================
+
+ALTER TABLE copc_schema.users 
+ADD COLUMN IF NOT EXISTS profile_photo VARCHAR(255);
+
 -- 1. Academic programs
 CREATE TABLE copc_schema.programs (
     program_id SERIAL PRIMARY KEY,

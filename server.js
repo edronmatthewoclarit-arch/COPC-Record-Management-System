@@ -2,6 +2,7 @@ const express = require('express');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const cors = require('cors');
+const path = require('path');
 const pool = require('./src/db');
 
 // Import modular routes
@@ -15,6 +16,7 @@ const PORT = 3000;
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Exposes uploaded files & profile photos
 
 // Root route
 app.get('/', (req, res) => {

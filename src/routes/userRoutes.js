@@ -1,22 +1,50 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser } = require('../controllers/userController');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const {
+  getAllUsers,
+  registerUser,
+  loginUser,
+  updateProfilePhoto,
+  updatePassword,
+} = require('../controllers/userController');
 
-// GET endpoint to fetch all users from copc_schema.users
-router.get('/', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT user_id, name, email, role, created_at FROM copc_schema.users;');
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
-  }
+// Configure Multer for Profile Photos
+const uploadDir = './uploads/avatars';
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+  },
 });
 
-// POST endpoint for user registration (handled by userController)
-router.post('/register', registerUser);
+const imageFilter = (req, file, cb) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only JPG, PNG, or WEBP images are allowed!'), false);
+  }
+};
 
-// POST endpoint for user login (handled by userController)
+const uploadAvatar = multer({
+  storage,
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
+
+// Routes
+router.get('/', getAllUsers);
+router.post('/register', registerUser); // Connect "Add Representative" modal here
 router.post('/login', loginUser);
+router.patch('/:id/photo', uploadAvatar.single('photo'), updateProfilePhoto); // Connect Change Photo here
+router.patch('/:id/password', updatePassword); // Connect Password Update here
 
 module.exports = router;

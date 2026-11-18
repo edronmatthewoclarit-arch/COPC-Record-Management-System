@@ -1,16 +1,8 @@
-// Uncomment when Express backend is running:
-// import axios from "axios";
-//
-// const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
-//
-// const getAuthHeaders = (token) => ({
-//   headers: {
-//     Authorization: `Bearer ${token}`,
-//     "Content-Type": "application/json",
-//   },
-// });
+// Program Head Requests API
 
 export const initialProgramHeadRequests = [];
+
+export { initialFacultyRecords } from "./faculty.api";
 
 /**
  * Fetch all document requests assigned to the Program Head
@@ -19,10 +11,7 @@ export const initialProgramHeadRequests = [];
 export const getMyRequests = async (_token) => {
   try {
     // Uncomment when Express backend is running:
-    // const response = await axios.get(
-    //   `${BASE_URL}/program-head/requests`,
-    //   getAuthHeaders(_token)
-    // );
+    // const response = await axios.get(`${BASE_URL}/program-head/requests`, getAuthHeaders(_token));
     // return response.data;
     return initialProgramHeadRequests;
   } catch (error) {
@@ -39,10 +28,7 @@ export const getMyRequests = async (_token) => {
 export const getRequestById = async (id, _token) => {
   try {
     // Uncomment when Express backend is running:
-    // const response = await axios.get(
-    //   `${BASE_URL}/program-head/requests/${id}`,
-    //   getAuthHeaders(_token)
-    // );
+    // const response = await axios.get(`${BASE_URL}/program-head/requests/${id}`, getAuthHeaders(_token));
     // return response.data;
     return initialProgramHeadRequests.find((r) => r.id === id) || null;
   } catch (error) {
@@ -60,16 +46,9 @@ export const getRequestById = async (id, _token) => {
 export const submitRequestDocument = async (id, formData, _token) => {
   try {
     // Uncomment when Express backend is running:
-    // const response = await axios.post(
-    //   `${BASE_URL}/program-head/requests/${id}/submit`,
-    //   formData,
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${_token}`,
-    //       "Content-Type": "multipart/form-data",
-    //     },
-    //   }
-    // );
+    // const response = await axios.post(`${BASE_URL}/program-head/requests/${id}/submit`, formData, {
+    //   headers: { Authorization: `Bearer ${_token}`, "Content-Type": "multipart/form-data" },
+    // });
     // return response.data;
     return { id, formData };
   } catch (error) {

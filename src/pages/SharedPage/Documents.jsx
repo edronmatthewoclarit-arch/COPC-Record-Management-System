@@ -4,18 +4,33 @@ import Badge from "../../components/ui/Badge";
 import PageHead from "../../components/ui/PageHead";
 import UiIcon from "../../components/ui/UiIcon";
 
-export function Documents({ openDocument }) {
+export function Documents({
+  documents = initialDocuments,
+  openDocument,
+  userRole = "Program Head",
+}) {
   const [query, setQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [status, setStatus] = useState("All");
   const [draftStatus, setDraftStatus] = useState("All");
   const [sort, setSort] = useState("Latest Uploaded");
 
-  const docs = initialDocuments
+  const allCount = documents.length;
+  const reviewCount = documents.filter((d) =>
+    (d.status || "").toLowerCase().includes("review")
+  ).length;
+  const approvedCount = documents.filter(
+    (d) => (d.status || "").toLowerCase() === "approved"
+  ).length;
+  const revisionCount = documents.filter((d) =>
+    (d.status || "").toLowerCase().includes("revision")
+  ).length;
+
+  const docs = documents
     .map((d, i) => ({ ...d, index: i }))
     .filter(
       (d) =>
-        `${d.name} ${d.requirement} ${d.record} ${d.uploader}`
+        `${d.name} ${d.requirement || ""} ${d.record || ""} ${d.uploader}`
           .toLowerCase()
           .includes(query.toLowerCase()) &&
         (status === "All" || d.status === status)
@@ -37,7 +52,11 @@ export function Documents({ openDocument }) {
         title="Documents"
         subtitle="Manage, review, and track submitted COPC documents."
         action={
-          <button className="btn secondary icon-button">
+          <button
+            type="button"
+            className="btn secondary icon-button"
+            onClick={() => alert("Exporting all submitted documents...")}
+          >
             <UiIcon name="download" />
             Export Document List
           </button>
@@ -46,10 +65,10 @@ export function Documents({ openDocument }) {
 
       <section className="card document-summary">
         {[
-          ["0", "All Documents", "file", "navy"],
-          ["0", "For Review", "clock", "amber"],
-          ["0", "Approved", "check", "green"],
-          ["0", "For Revision", "revision", "red"],
+          [String(allCount), "All Documents", "file", "navy"],
+          [String(reviewCount), "For Review", "clock", "amber"],
+          [String(approvedCount), "Approved", "check", "green"],
+          [String(revisionCount), "For Revision", "revision", "red"],
         ].map((x) => (
           <div key={x[1]}>
             <i className={x[3]}>
@@ -76,6 +95,7 @@ export function Documents({ openDocument }) {
 
           <div className="filter-wrap">
             <button
+              type="button"
               className={`btn filter-button ${status !== "All" ? "has-filters" : ""}`}
               onClick={() => {
                 setDraftStatus(status);
@@ -84,14 +104,16 @@ export function Documents({ openDocument }) {
             >
               <UiIcon name="filter" />
               Filter
-              {status !== "All" && <em>0</em>}
+              {status !== "All" && <em>1</em>}
             </button>
 
             {filterOpen && (
               <div className="filter-popover document-filter">
                 <div className="filter-popover-head">
                   <b>Filter Documents</b>
-                  <button onClick={() => setFilterOpen(false)}>×</button>
+                  <button type="button" onClick={() => setFilterOpen(false)}>
+                    ×
+                  </button>
                 </div>
 
                 <div className="filter-section">
@@ -115,32 +137,16 @@ export function Documents({ openDocument }) {
                   ))}
                 </div>
 
-                <div className="filter-section">
-                  <span>ADDITIONAL FILTERS</span>
-                  <label>
-                    Requirement
-                    <select>
-                      <option>All Requirements</option>
-                      <option>Selected requirement</option>
-                      <option>Syllabi</option>
-                    </select>
-                  </label>
-                  <label>
-                    Uploaded By
-                    <select>
-                      <option>All Uploaders</option>
-                    </select>
-                  </label>
-                </div>
-
                 <div className="filter-actions">
                   <button
+                    type="button"
                     className="btn secondary"
                     onClick={() => setDraftStatus("All")}
                   >
                     Clear Filters
                   </button>
                   <button
+                    type="button"
                     className="btn primary"
                     onClick={() => {
                       setStatus(draftStatus);
@@ -154,7 +160,11 @@ export function Documents({ openDocument }) {
             )}
           </div>
 
-          <select value={sort} onChange={(e) => setSort(e.target.value)}>
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            aria-label="Sort documents"
+          >
             <option>Latest Uploaded</option>
             <option>Oldest Uploaded</option>
             <option>Recently Updated</option>
@@ -177,33 +187,33 @@ export function Documents({ openDocument }) {
           <tbody>
             {docs.map((d) => (
               <tr
-                key={d.name}
+                key={`${d.name}-${d.index}`}
                 className="clickable-row document-row"
-                onClick={() => openDocument(d.index)}
+                onClick={() => openDocument(d.index, d)}
               >
                 <td>
                   <div className="document-file">
                     <i>PDF</i>
                     <span>
                       <b>{d.name}</b>
-                      <small>PDF • {d.size}</small>
+                      <small>PDF • {d.size || "1.8 MB"}</small>
                     </span>
                   </div>
                 </td>
                 <td>
                   <b>{d.requirement}</b>
-                  <small>{d.record}</small>
+                  <small>{d.record || d.name}</small>
                 </td>
                 <td>
                   <b>{d.uploader}</b>
-                  <small>{d.role}</small>
+                  <small>{d.role || userRole}</small>
                 </td>
                 <td>
                   {d.date}
-                  <small>{d.time}</small>
+                  {d.time && <small>{d.time}</small>}
                 </td>
                 <td>
-                  <b>{d.version}</b>
+                  <b>{d.version || "v1"}</b>
                 </td>
                 <td>
                   <Badge status={d.status} />

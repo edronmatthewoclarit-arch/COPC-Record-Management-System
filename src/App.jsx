@@ -1,6 +1,6 @@
 import "./App.css";
 import { useEffect, useState } from "react";
-import { initialNotices } from "./api/CopcViewAPI/document.api";
+import { initialDocuments, initialNotices } from "./api/CopcViewAPI/document.api";
 import { categoryOptions, initialRequirements } from "./api/CopcViewAPI/requirement.api";
 import Header from "./components/layout/Header";
 import Sidebar from "./components/layout/Sidebar";
@@ -10,12 +10,19 @@ import { useAuth } from "./context/AuthContext";
 import CoordinatorDashboard from "./pages/CopcCoordinatorPage/CoordinatorDashboard";
 import DocumentDetails from "./pages/SharedPage/DocumentDetails";
 import Documents from "./pages/SharedPage/Documents";
+import DeanPage from "./pages/DeanPage/DeanPage";
+import FacultyPage from "./pages/FacultyPage/FacultyPage";
+import OfficeRepresentativePage from "./pages/OfficeRepresentativePage/OfficeRepresentativePage";
+import SendFileModal from "./pages/SharedPage/SendFileModal";
 import Login from "./pages/AuthPage/Login";
 import LogoutModal from "./pages/AuthPage/LogoutModal";
 import NotificationsPage from "./pages/SharedPage/NotificationsPage";
 import Reports from "./pages/CopcCoordinatorPage/Reports";
 import Representatives from "./pages/CopcCoordinatorPage/Representatives";
 import Requests, { RequestDetail } from "./pages/ProgramHeadPage/Requests";
+import NewRequestModal from "./pages/ProgramHeadPage/NewRequestModal";
+import { initialProgramHeadRequests } from "./api/ProgramHeadViewAPI/request.api";
+import { initialFacultyRecords } from "./api/ProgramHeadViewAPI/faculty.api";
 import RequirementDetails, { RecordDetails } from "./pages/CopcCoordinatorPage/RequirementDetails";
 import Requirements from "./pages/CopcCoordinatorPage/Requirements";
 import Review from "./pages/CopcCoordinatorPage/Review";
@@ -34,7 +41,13 @@ export function App() {
     localStorage.setItem("copc-theme", theme);
   }, [theme]);
 
-  const [page, setPage] = useState("dashboard");
+  const [page, setPage] = useState(() => {
+    if (currentRole === "Dean") return "dean";
+    if (currentRole === "Faculty") return "faculty";
+    if (currentRole === "Office Representative") return "officeRepresentative";
+    return "dashboard";
+  });
+
   const [notify, setNotify] = useState(false);
   const [notices, setNotices] = useState(initialNotices);
   const [modal, setModal] = useState(null);
@@ -42,11 +55,19 @@ export function App() {
 
   const [selectedRequirement, setSelectedRequirement] = useState(0);
   const [selectedDocument, setSelectedDocument] = useState(0);
+  const [selectedDocObj, setSelectedDocObj] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
 
   const [addedRequirements, setAddedRequirements] = useState([]);
   const [addedRecords, setAddedRecords] = useState([]);
   const [addedRepresentatives, setAddedRepresentatives] = useState([]);
+  const [requests, setRequests] = useState(initialProgramHeadRequests);
+  const [facultyRecords, setFacultyRecords] = useState(initialFacultyRecords);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [documents, setDocuments] = useState(initialDocuments);
+  const [sendFileRole, setSendFileRole] = useState("Faculty");
+  const [revisionRemarks, setRevisionRemarks] = useState("");
+  const [approvalRemarks, setApprovalRemarks] = useState("");
 
   const [newRep, setNewRep] = useState({
     name: "",
@@ -102,7 +123,18 @@ export function App() {
   };
 
   if (!logged) {
-    return <Login onLogin={(role, email) => login(role, email)} />;
+    return (
+      <Login
+        onLogin={(role, email) => {
+          login(role, email);
+          if (role === "Dean") setPage("dean");
+          else if (role === "Faculty") setPage("faculty");
+          else if (role === "Office Representative")
+            setPage("officeRepresentative");
+          else setPage("dashboard");
+        }}
+      />
+    );
   }
 
   const currentRequirementName =
@@ -135,7 +167,11 @@ export function App() {
             (currentRole === "COPC Coordinator" ? (
               <CoordinatorDashboard setPage={setPage} />
             ) : (
-              <UserDashboard role={currentRole} setPage={setPage} />
+              <UserDashboard
+                role={currentRole}
+                setPage={setPage}
+                openNewRequest={() => setModal("programHeadNewRequest")}
+              />
             ))}
 
           {page === "requirements" && (
@@ -178,14 +214,106 @@ export function App() {
             />
           )}
 
-          {page === "requests" && <Requests setPage={setPage} />}
-          {page === "requestDetail" && <RequestDetail setPage={setPage} />}
+          {page === "requests" && (
+            <Requests
+              setPage={setPage}
+              requests={requests}
+              facultyRecords={facultyRecords}
+              onSelectRequest={(r) => setSelectedRequest(r)}
+              openNewRequest={() => setModal("programHeadNewRequest")}
+              onAddFaculty={(newFac) => {
+                setFacultyRecords((prev) => [...prev, newFac]);
+                setToast(`Added ${newFac.name} to faculty records.`);
+                setTimeout(() => setToast(""), 3000);
+              }}
+              onAddRequest={(newReqData) => {
+                const uploaderFac = facultyRecords.find(
+                  (f) =>
+                    f.name.toLowerCase() === newReqData.uploader.toLowerCase()
+                );
+                const role = uploaderFac?.position || "Faculty";
+                const newEntry = [
+                  newReqData.documentName,
+                  newReqData.uploader,
+                  role,
+                  new Date().toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  }),
+                  "Requested",
+                  "Just now",
+                  newReqData.details,
+                ];
+                newEntry.documentName = newReqData.documentName;
+                newEntry.uploader = newReqData.uploader;
+                newEntry.details = newReqData.details;
+
+                setRequests((prev) => [newEntry, ...prev]);
+                done(
+                  `Document request for "${newReqData.documentName}" sent to ${newReqData.uploader}.`,
+                  "requests"
+                );
+              }}
+            />
+          )}
+          {page === "requestDetail" && (
+            <RequestDetail setPage={setPage} request={selectedRequest} />
+          )}
 
           {page === "documents" && (
             <Documents
-              openDocument={(index) => {
+              documents={documents}
+              userRole={currentRole}
+              openDocument={(index, docObj) => {
                 setSelectedDocument(index);
+                setSelectedDocObj(docObj);
                 setPage("documentDetail");
+              }}
+            />
+          )}
+
+          {page === "dean" && (
+            <DeanPage
+              documents={documents}
+              openDocument={(index, docObj) => {
+                setSelectedDocument(index);
+                setSelectedDocObj(docObj);
+                setPage("documentDetail");
+              }}
+              openSendFile={() => {
+                setSendFileRole("Dean");
+                setModal("sendFile");
+              }}
+            />
+          )}
+
+          {page === "faculty" && (
+            <FacultyPage
+              documents={documents}
+              openDocument={(index, docObj) => {
+                setSelectedDocument(index);
+                setSelectedDocObj(docObj);
+                setPage("documentDetail");
+              }}
+              openSendFile={() => {
+                setSendFileRole("Faculty");
+                setModal("sendFile");
+              }}
+            />
+          )}
+
+          {page === "officeRepresentative" && (
+            <OfficeRepresentativePage
+              documents={documents}
+              openDocument={(index, docObj) => {
+                setSelectedDocument(index);
+                setSelectedDocObj(docObj);
+                setPage("documentDetail");
+              }}
+              openSendFile={() => {
+                setSendFileRole("Office Representative");
+                setModal("sendFile");
               }}
             />
           )}
@@ -200,9 +328,18 @@ export function App() {
           {page === "documentDetail" && (
             <DocumentDetails
               index={selectedDocument}
+              document={selectedDocObj}
+              documents={documents}
+              userRole={currentRole}
               setPage={setPage}
-              openRevision={() => setModal("revision")}
-              openApprove={() => setModal("approve")}
+              openRevision={(doc) => {
+                if (doc) setSelectedDocObj(doc);
+                setModal("revision");
+              }}
+              openApprove={(doc) => {
+                if (doc) setSelectedDocObj(doc);
+                setModal("approve");
+              }}
             />
           )}
 
@@ -577,21 +714,52 @@ export function App() {
         <Modal
           title="Send revision request?"
           onClose={() => setModal(null)}
-          action={() => done("Revision request submitted.", "requests")}
+          action={() => {
+            const targetDoc = selectedDocObj || documents[selectedDocument];
+            if (targetDoc) {
+              setDocuments((prevDocs) =>
+                prevDocs.map((d) =>
+                  d.name === targetDoc.name || d.id === targetDoc.id
+                    ? {
+                        ...d,
+                        status: "For Revision",
+                        remark: revisionRemarks || "Please revise and resubmit.",
+                      }
+                    : d
+                )
+              );
+              if (selectedDocObj) {
+                setSelectedDocObj((prev) => ({
+                  ...prev,
+                  status: "For Revision",
+                  remark: revisionRemarks || "Please revise and resubmit.",
+                }));
+              }
+            }
+            setRevisionRemarks("");
+            done(
+              `Revision request for "${targetDoc?.name || "document"}" submitted.`,
+              "documents"
+            );
+          }}
           actionLabel="Send revision request"
         >
           <div className="modal-doc">
             <b>Selected requirement</b>
             <span>
-              Faculty_Information_BSIT_v2.pdf · Submitted by Juan Dela Cruz
+              {(selectedDocObj || documents[selectedDocument])?.name || "Document.pdf"} · Submitted by{" "}
+              {(selectedDocObj || documents[selectedDocument])?.uploader || "Faculty"}
             </span>
           </div>
           <label>
             Revision remarks *
-            <textarea defaultValue="" />
+            <textarea
+              value={revisionRemarks}
+              onChange={(e) => setRevisionRemarks(e.target.value)}
+            />
           </label>
           <div className="warning">
-            This records the coordinator as the revision requester. The person
+            This records {currentRole} as the revision requester. The person
             who uploads the corrected file will be recorded as “Revised By.”
           </div>
         </Modal>
@@ -601,12 +769,26 @@ export function App() {
         <Modal
           title="Approve document?"
           onClose={() => setModal(null)}
-          action={() =>
+          action={() => {
+            const targetDoc = selectedDocObj || documents[selectedDocument];
+            if (targetDoc) {
+              setDocuments((prevDocs) =>
+                prevDocs.map((d) =>
+                  d.name === targetDoc.name || d.id === targetDoc.id
+                    ? { ...d, status: "Approved" }
+                    : d
+                )
+              );
+              if (selectedDocObj) {
+                setSelectedDocObj((prev) => ({ ...prev, status: "Approved" }));
+              }
+            }
+            setApprovalRemarks("");
             done(
-              "Document approved as an internal COPC requirement.",
+              `Document "${targetDoc?.name || "document"}" approved as an internal COPC requirement.`,
               "documents"
-            )
-          }
+            );
+          }}
           actionLabel="Confirm approval"
         >
           <p>
@@ -615,10 +797,26 @@ export function App() {
           </p>
           <div className="approve-summary">
             {[
-              ["Requirement", ""],
-              ["Document", ""],
-              ["Submitted by", ""],
-              ["Current version", ""],
+              [
+                "Requirement",
+                (selectedDocObj || documents[selectedDocument])?.requirement ||
+                  "Faculty Information",
+              ],
+              [
+                "Document",
+                (selectedDocObj || documents[selectedDocument])?.name ||
+                  "Document.pdf",
+              ],
+              [
+                "Submitted by",
+                (selectedDocObj || documents[selectedDocument])?.uploader ||
+                  "Uploader",
+              ],
+              [
+                "Current version",
+                (selectedDocObj || documents[selectedDocument])?.version ||
+                  "v1",
+              ],
             ].map((x) => (
               <div key={x[0]}>
                 <span>{x[0]}</span>
@@ -628,13 +826,58 @@ export function App() {
           </div>
           <label>
             Approval remarks (optional)
-            <textarea aria-label="Add an internal approval note" />
+            <textarea
+              value={approvalRemarks}
+              onChange={(e) => setApprovalRemarks(e.target.value)}
+              aria-label="Add an internal approval note"
+            />
           </label>
           <div className="warning">
-            This is an internal document workflow decision. It does not indicate
-            that CHED has granted a COPC.
+            This is an internal document workflow decision. It indicates that the document has been approved internally.
           </div>
         </Modal>
+      )}
+
+      {modal === "sendFile" && (
+        <SendFileModal
+          defaultRole={sendFileRole}
+          onClose={() => setModal(null)}
+          onSendFile={(newFileData) => {
+            const newDoc = {
+              id: Date.now(),
+              name: newFileData.name,
+              requirement: newFileData.requirement,
+              record: newFileData.record,
+              uploader: newFileData.uploader,
+              role: newFileData.role,
+              date: new Date().toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+              time: new Date().toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+              }),
+              version: "v1",
+              size: newFileData.size || "1.8 MB",
+              status: "Revision", // Status strictly only approved and revision
+              details:
+                newFileData.notes ||
+                "Sent document for COPC Coordinator review.",
+            };
+
+            setDocuments((prev) => [newDoc, ...prev]);
+            done(
+              `File "${newDoc.name}" sent successfully to the COPC Coordinator.`,
+              sendFileRole === "Dean"
+                ? "dean"
+                : sendFileRole === "Faculty"
+                  ? "faculty"
+                  : "officeRepresentative"
+            );
+          }}
+        />
       )}
 
       {modal === "logout" && (
@@ -715,6 +958,47 @@ export function App() {
             </label>
           </div>
         </Modal>
+      )}
+
+      {modal === "programHeadNewRequest" && (
+        <NewRequestModal
+          onClose={() => setModal(null)}
+          facultyRecords={facultyRecords}
+          onAddFaculty={(newFac) => {
+            setFacultyRecords((prev) => [...prev, newFac]);
+            setToast(`Added ${newFac.name} to faculty records.`);
+            setTimeout(() => setToast(""), 3000);
+          }}
+          onSubmit={(newReqData) => {
+            const uploaderFac = facultyRecords.find(
+              (f) =>
+                f.name.toLowerCase() === newReqData.uploader.toLowerCase()
+            );
+            const role = uploaderFac?.position || "Faculty";
+            const newEntry = [
+              newReqData.documentName,
+              newReqData.uploader,
+              role,
+              new Date().toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              }),
+              "Requested",
+              "Just now",
+              newReqData.details,
+            ];
+            newEntry.documentName = newReqData.documentName;
+            newEntry.uploader = newReqData.uploader;
+            newEntry.details = newReqData.details;
+
+            setRequests((prev) => [newEntry, ...prev]);
+            done(
+              `Document request for "${newReqData.documentName}" sent to ${newReqData.uploader}.`,
+              "requests"
+            );
+          }}
+        />
       )}
     </div>
   );

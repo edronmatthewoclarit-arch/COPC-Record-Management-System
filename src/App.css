@@ -1482,3 +1482,649 @@ aside nav button.active {
     height: 52px;
   }
 }
+
+
+/* Program Head New Request Modal & Faculty Tabs */
+.modal.ph-request-dialog {
+  width: min(880px, 95vw);
+  max-width: 880px;
+}
+
+.ph-modal-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  margin: -10px -22px 18px;
+  padding: 0 22px;
+  background: #f8fafc;
+}
+
+.ph-modal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ph-modal-tab:hover {
+  color: #0872e8;
+}
+
+.ph-modal-tab.active {
+  color: #0872e8;
+  border-bottom-color: #0872e8;
+  background: #ffffff;
+}
+
+.ph-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 9999px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.ph-modal-tab.active .ph-tab-badge {
+  background: #0872e8;
+  color: #ffffff;
+}
+
+.ph-label-with-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.ph-text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 0;
+  color: #0872e8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.ph-text-btn:hover {
+  text-decoration: underline;
+}
+
+.ph-uploader-select-wrapper select {
+  width: 100%;
+}
+
+.ph-uploader-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #0284c7;
+  background: #f0f9ff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #bae6fd;
+}
+
+.ph-modal-error {
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.ph-modal-notice.success {
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+}
+
+.ph-faculty-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.ph-faculty-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 380px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d6dce5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.ph-faculty-search input {
+  width: 100%;
+  border: 0 !important;
+  outline: none !important;
+  background: transparent;
+  font-size: 13px;
+}
+
+.ph-add-faculty-btn {
+  height: 40px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ph-add-faculty-panel {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: copc-modal-in 0.25s ease;
+}
+
+.ph-add-faculty-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.ph-add-faculty-head h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.ph-add-faculty-head small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.ph-faculty-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.ph-add-faculty-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.ph-faculty-table-container {
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.ph-faculty-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ph-faculty-table thead tr {
+  background: #f3f4f6;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.ph-faculty-table th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: #374151;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.ph-faculty-table td {
+  padding: 10px 14px;
+  font-size: 12.5px;
+  color: #1f2937;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.ph-faculty-name-wrap {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.ph-faculty-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ph-current-tag {
+  display: block;
+  font-size: 10px;
+  color: #0284c7;
+  font-weight: 600;
+}
+
+.ph-faculty-email {
+  color: #0872e8;
+  text-decoration: none;
+}
+
+.ph-faculty-email:hover {
+  text-decoration: underline;
+}
+
+.ph-faculty-table tr.highlighted-row {
+  background: #f0fdf4;
+}
+
+/* Dark theme support for Program Head Modal & Faculty Tab */
+:root[data-theme="dark"] .ph-modal-tabs {
+  background: #162032;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .ph-modal-tab {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .ph-modal-tab.active {
+  color: #38bdf8;
+  border-bottom-color: #38bdf8;
+  background: #1e293b;
+}
+
+:root[data-theme="dark"] .ph-add-faculty-panel {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .ph-add-faculty-head {
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .ph-add-faculty-head h4 {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .ph-faculty-table-container {
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .ph-faculty-table thead tr {
+  background: #1e293b;
+}
+
+:root[data-theme="dark"] .ph-faculty-table th {
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .ph-faculty-table td {
+  color: #f1f5f9;
+  border-color: #1e293b;
+}
+
+:root[data-theme="dark"] .ph-faculty-search {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .ph-faculty-search input {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .ph-faculty-avatar {
+  background: #0369a1;
+  color: #e0f2fe;
+}
+
+:root[data-theme="dark"] .ph-faculty-table tr.highlighted-row {
+  background: rgba(16, 185, 129, 0.15);
+}
+
+:root[data-theme="dark"] .ph-uploader-hint {
+  background: #0c2d48;
+  border-color: #0369a1;
+  color: #7dd3fc;
+}
+
+
+/* Document Actions (Approve & Revision Buttons) */
+.doc-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.doc-revision-btn,
+.doc-head-actions .btn.danger {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
+}
+
+.doc-revision-btn:hover,
+.doc-head-actions .btn.danger:hover {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+}
+
+.doc-approve-btn,
+.doc-head-actions .btn.success {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border: 1px solid #0284c7 !important;
+}
+
+.doc-approve-btn:hover,
+.doc-head-actions .btn.success:hover {
+  background: #0369a1 !important;
+  border-color: #0369a1 !important;
+}
+
+.decision-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.decision-actions-row .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 40px;
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.decision-actions-row .btn.danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.decision-actions-row .btn.danger:hover {
+  background: #fee2e2;
+}
+
+.decision-actions-row .btn.success {
+  background: #0284c7;
+  color: #ffffff;
+  border: 1px solid #0284c7;
+}
+
+.decision-actions-row .btn.success:hover {
+  background: #0369a1;
+}
+
+/* Badge Revision */
+.badge.revision {
+  background: #feecee;
+  color: #bf3343;
+}
+
+/* Role Document Pages (Dean, Faculty, Office Representative) */
+.role-document-page {
+  animation: copc-fade-in 0.2s ease-out;
+}
+
+.send-files-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  height: 42px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.tab-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.tabs button.active .tab-pill {
+  background: #0872e8;
+  color: #ffffff;
+}
+
+.role-sent-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.role-sent-table thead tr {
+  background: #f8fafc;
+}
+
+.role-sent-table th {
+  padding: 14px 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #334155;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.role-sent-table td {
+  padding: 14px 20px;
+  font-size: 13px;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.role-doc-record {
+  display: block;
+  font-size: 11.5px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.role-uploader-cell b {
+  display: block;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.role-uploader-cell small {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.role-date-cell span {
+  display: block;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.role-date-cell small {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.view-doc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+/* Paper / Document Preview Details */
+.paper-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 16px;
+  font-size: 11px;
+}
+
+.paper-table th,
+.paper-table td {
+  padding: 7px 10px;
+  border: 1px solid #cbd5e1;
+  text-align: left;
+}
+
+.paper-table th {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.paper-table td {
+  color: #334155;
+}
+
+.paper-section {
+  margin-top: 18px;
+}
+
+.paper-section h3 {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: #0f172a;
+  margin-bottom: 8px;
+  border-bottom: 1.5px solid #0f172a;
+  padding-bottom: 4px;
+}
+
+.paper-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 36px;
+  padding-top: 18px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.paper-sign {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.paper-sign b {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.paper-sign span {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 4px;
+}
+
+.paper-sign small {
+  font-size: 10.5px;
+  color: #475569;
+}
+
+.system-remark {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.system-remark .avatar.danger {
+  background: #e11d48;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+/* Dark mode for Role Document Pages & Actions */
+:root[data-theme="dark"] .role-sent-table thead tr {
+  background: #1e293b;
+}
+
+:root[data-theme="dark"] .role-sent-table th {
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+:root[data-theme="dark"] .role-sent-table td {
+  color: #f1f5f9;
+  border-color: #1e293b;
+}
+
+:root[data-theme="dark"] .role-uploader-cell b {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .role-uploader-cell small,
+:root[data-theme="dark"] .role-doc-record {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .role-date-cell span {
+  color: #f1f5f9;
+}
+
+:root[data-theme="dark"] .tab-pill {
+  background: rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .tabs button.active .tab-pill {
+  background: #38bdf8;
+  color: #0f172a;
+}
+
+:root[data-theme="dark"] .paper-table th {
+  background: #e2e8f0;
+  color: #0f172a;
+}

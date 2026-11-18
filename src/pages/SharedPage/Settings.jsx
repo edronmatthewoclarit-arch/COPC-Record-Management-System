@@ -107,7 +107,6 @@ export function Settings({
                       key={`email-${idx}`}
                       type="email"
                       value={val}
-                      placeholder="name@msunaawan.edu.ph"
                       onChange={(e) => {
                         const next = [...emails];
                         next[idx] = e.target.value;
@@ -134,7 +133,6 @@ export function Settings({
                       key={`contact-${idx}`}
                       type="tel"
                       value={val}
-                      placeholder="09XXXXXXXXX"
                       onChange={(e) => {
                         const next = [...contacts];
                         next[idx] = e.target.value;

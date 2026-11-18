@@ -5,16 +5,51 @@ const coordinatorNav = [
   { id: "requirements", label: "Requirements", icon: "checklist" },
   { id: "documents", label: "Documents", icon: "file" },
   { id: "representatives", label: "Representative", icon: "users" },
+  { id: "dean", label: "Dean Sent Files", icon: "academic" },
+  { id: "faculty", label: "Faculty Sent Files", icon: "users" },
+  { id: "officeRepresentative", label: "Office Rep Files", icon: "file" },
 ];
 
-const userNav = [
+const programHeadNav = [
   { id: "dashboard", label: "Dashboard", icon: "home" },
   { id: "requests", label: "My Requests", icon: "send" },
   { id: "documents", label: "My Documents", icon: "file" },
+  { id: "dean", label: "Dean Sent Files", icon: "academic" },
+  { id: "faculty", label: "Faculty Sent Files", icon: "users" },
+  { id: "officeRepresentative", label: "Office Rep Files", icon: "file" },
+];
+
+const deanNav = [
+  { id: "dean", label: "Dean Documents", icon: "file" },
+  { id: "documents", label: "All Documents", icon: "checklist" },
+  { id: "dashboard", label: "Dashboard", icon: "home" },
+];
+
+const facultyNav = [
+  { id: "faculty", label: "Faculty Documents", icon: "file" },
+  { id: "documents", label: "All Documents", icon: "checklist" },
+  { id: "dashboard", label: "Dashboard", icon: "home" },
+];
+
+const officeRepNav = [
+  { id: "officeRepresentative", label: "Office Rep Documents", icon: "file" },
+  { id: "documents", label: "All Documents", icon: "checklist" },
+  { id: "dashboard", label: "Dashboard", icon: "home" },
 ];
 
 export function Sidebar({ page, setPage, role }) {
-  const visibleNav = role === "COPC Coordinator" ? coordinatorNav : userNav;
+  const visibleNav =
+    role === "COPC Coordinator"
+      ? coordinatorNav
+      : role === "Program Head"
+        ? programHeadNav
+        : role === "Dean"
+          ? deanNav
+          : role === "Faculty"
+            ? facultyNav
+            : role === "Office Representative"
+              ? officeRepNav
+              : programHeadNav;
 
   return (
     <aside>

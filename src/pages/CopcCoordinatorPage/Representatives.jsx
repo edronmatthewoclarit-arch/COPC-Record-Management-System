@@ -31,7 +31,6 @@ export function Representatives({
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search representative records..."
               aria-label="Search representative records"
             />
           </div>

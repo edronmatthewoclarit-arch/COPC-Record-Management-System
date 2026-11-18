@@ -10,6 +10,10 @@ const PORT = 3000;
 // Middleware to parse incoming JSON requests
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the COPC RMS Backend API! Go to /api-docs for Swagger UI.');
+});
+
 // --- Swagger Setup ---
 const options = {
   definition: {
@@ -34,6 +38,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Mount routes
 app.use('/api/users', userRoutes);
+
+const cors = require('cors');
+app.use(cors());
 
 // Start server
 app.listen(PORT, () => {

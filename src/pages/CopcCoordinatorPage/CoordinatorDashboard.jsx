@@ -25,7 +25,12 @@ export function CoordinatorDashboard({ setPage }) {
           </div>
 
           <div className="progress-content">
-            <div className="ring">
+            <div
+              className="ring"
+              style={{
+                background: `conic-gradient(var(--blue) 0 ${progress.completionPercentage}%, #e8edf3 ${progress.completionPercentage}%)`,
+              }}
+            >
               <div>
                 <strong>{progress.completionPercentage}%</strong>
                 <span>Completed</span>

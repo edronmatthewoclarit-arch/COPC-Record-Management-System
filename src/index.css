@@ -2989,7 +2989,7 @@ nav button.active {
   width: 90px;
   height: 90px;
   border-radius: 50%;
-  background: conic-gradient(#0b4c91 0 80%, #e6edf4 80%);
+  background: conic-gradient(#0b4c91 0 0%, #e6edf4 0%);
   display: grid;
   place-items: center;
   margin-right: 26px

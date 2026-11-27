@@ -5,28 +5,30 @@ const coordinatorNav = [
   { id: "requirements", label: "Requirements", icon: "checklist" },
   { id: "documents", label: "Documents", icon: "file" },
   { id: "representatives", label: "Representative", icon: "users" },
+  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 const programHeadNav = [
   { id: "dashboard", label: "Dashboard", icon: "home" },
-  { id: "requests", label: "My Requests", icon: "send" },
+  { id: "requests", label: "Request", icon: "send" },
   { id: "documents", label: "Program Documents", icon: "file" },
-  { id: "facultyRecords", label: "Faculty Records", icon: "users" },
+  { id: "facultyRecords", label: "Faculty", icon: "users" },
+  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 const deanNav = [
-  { id: "documents", label: "Documents", icon: "file" },
-  { id: "dashboard", label: "Dashboard", icon: "home" },
+  { id: "documents", label: "Program Documents", icon: "file" },
+  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 const facultyNav = [
-  { id: "documents", label: "Documents", icon: "file" },
-  { id: "dashboard", label: "Dashboard", icon: "home" },
+  { id: "documents", label: "Program Documents", icon: "file" },
+  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 const officeRepNav = [
-  { id: "documents", label: "Documents", icon: "file" },
-  { id: "dashboard", label: "Dashboard", icon: "home" },
+  { id: "documents", label: "Program Documents", icon: "file" },
+  { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 export function Sidebar({ page, setPage, role }) {

@@ -3,6 +3,7 @@ import { initialProgramHeadRequests } from "../../api/ProgramHeadViewAPI/request
 import { initialFacultyRecords } from "../../api/ProgramHeadViewAPI/faculty.api";
 import Badge from "../../components/ui/Badge";
 import PageHead from "../../components/ui/PageHead";
+import UiIcon from "../../components/ui/UiIcon";
 import NewRequestModal from "./NewRequestModal";
 
   export function Requests({
@@ -15,108 +16,133 @@ import NewRequestModal from "./NewRequestModal";
     onAddRequest,
   }) {
     const [query, setQuery] = useState("");
-    const [activeTab, setActiveTab] = useState("All");
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("All");
+    const [draftStatus, setDraftStatus] = useState("All");
     const [internalModalOpen, setInternalModalOpen] = useState(false);
 
-    const handleOpenModal = () => {
-      if (openNewRequest) {
-        openNewRequest();
-      } else {
-        setInternalModalOpen(true);
-      }
-    };
-
     const getDocName = (r) => (Array.isArray(r) ? r[0] : r.title || r.documentName || r.name);
-    const getRequestedDoc = (r) => (Array.isArray(r) ? r[0] : r.requestedDocument || r.documentName || r.name);
     const getUploader = (r) => (Array.isArray(r) ? r[1] : r.requestedBy || r.uploader);
-    const getRole = (r) => (Array.isArray(r) ? r[2] : r.role || r.position || "COPC Coordinator");
     const getDate = (r) => (Array.isArray(r) ? r[3] : r.dateRequested || r.date);
-    const getDueDate = (r) => (Array.isArray(r) ? r[7] || "—" : r.dueDate || "—");
     const getStatus = (r) => (Array.isArray(r) ? r[4] : r.status);
-    const getActivity = (r) => (Array.isArray(r) ? r[5] : r.lastActivity);
 
     const filteredRequests = requests.filter((r) => {
       const docName = getDocName(r) || "";
       const uploader = getUploader(r) || "";
-      const role = getRole(r) || "";
       const status = getStatus(r) || "";
 
-      const matchesSearch = `${docName} ${uploader} ${role}`
+      const matchesSearch = `${docName} ${uploader}`
         .toLowerCase()
         .includes(query.toLowerCase());
-      const matchesTab = activeTab === "All" || status === activeTab;
-      return matchesSearch && matchesTab;
+      const matchesFilter = statusFilter === "All" || status === statusFilter;
+      return matchesSearch && matchesFilter;
     });
+
+    const activeFilterCount = statusFilter !== "All" ? 1 : 0;
 
     return (
     <>
         <PageHead
-          title="My Requests"
+          title="Document Request"
           subtitle="Document requests assigned to your academic program by the COPC Coordinator."
-          action={
-            <button
-              type="button"
-              className="btn primary"
-              onClick={handleOpenModal}
-            >
-              ＋ New request
-            </button>
-          }
         />
 
         <section className="card table-card">
-          <div className="toolbar stacked">
+          <div className="document-toolbar">
             <div className="search">
-              ⌕{" "}
+              <UiIcon name="search" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search Requests..."
                 aria-label="Search requests"
               />
             </div>
-            <div className="tabs">
-              {[
-                "All",
-                "Requested",
-                "Submitted",
-                "For Revision",
-                "Resubmitted",
-                "Approved",
-              ].map((x) => (
-                <button
-                  key={x}
-                  className={activeTab === x ? "active" : ""}
-                  onClick={() => setActiveTab(x)}
-                >
-                  {x}
-                </button>
-              ))}
+
+            <div className="filter-wrap">
+              <button
+                type="button"
+                className={`btn filter-button ${activeFilterCount > 0 ? "has-filters" : ""}`}
+                onClick={() => {
+                  setDraftStatus(statusFilter);
+                  setFilterOpen(!filterOpen);
+                }}
+              >
+                <UiIcon name="filter" />
+                Filter
+                {activeFilterCount > 0 && <em>{activeFilterCount}</em>}
+              </button>
+
+              {filterOpen && (
+                <div className="filter-popover document-filter">
+                  <div className="filter-popover-head">
+                    <b>Filter Requests</b>
+                    <button type="button" onClick={() => setFilterOpen(false)}>
+                      ×
+                    </button>
+                  </div>
+
+                  <div className="filter-section">
+                    <span>REQUEST STATUS</span>
+                    {[
+                      "All",
+                      "Pending",
+                      "Submitted",
+                      "For Revision",
+                      "Approved",
+                    ].map((x) => (
+                      <label key={x}>
+                        <input
+                          type="radio"
+                          name="req-status"
+                          checked={draftStatus === x}
+                          onChange={() => setDraftStatus(x)}
+                        />
+                        {x}
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="filter-actions">
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={() => setDraftStatus("All")}
+                    >
+                      Clear Filters
+                    </button>
+                    <button
+                      type="button"
+                      className="btn primary"
+                      onClick={() => {
+                        setStatusFilter(draftStatus);
+                        setFilterOpen(false);
+                      }}
+                    >
+                      Apply Filters
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
           <table>
             <thead>
               <tr>
-                <th>Request Title</th>
-                <th>Requested Document</th>
-                <th>Requesting Office / Person</th>
-                <th>Date Requested</th>
-                <th>Due Date</th>
-                <th>Request Status</th>
-                <th>Actions</th>
+                <th>Document Name</th>
+                <th>Uploader</th>
+                <th>Date</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
                     {filteredRequests.length > 0 ? (
                       filteredRequests.map((r, index) => {
                         const doc = getDocName(r);
-                        const reqDoc = getRequestedDoc(r);
                         const upl = getUploader(r);
-                        const rol = getRole(r);
                         const dt = getDate(r);
-                        const due = getDueDate(r);
                         const st = getStatus(r);
-                        const act = getActivity(r);
 
                         return (
                           <tr
@@ -129,41 +155,18 @@ import NewRequestModal from "./NewRequestModal";
                               setPage(st === "Submitted" ? "review" : "requestDetail");
                             }}
                           >
-                            <td>
-                              <b>{doc}</b>
-                              {act && <small>{act}</small>}
-                            </td>
-                            <td>{reqDoc}</td>
-                            <td>
-                              <b>{upl}</b>
-                              <small>{rol}</small>
-                            </td>
+                            <td>{doc}</td>
+                            <td>{upl}</td>
                             <td>{dt}</td>
-                            <td>{due}</td>
                             <td>
                               <Badge status={st} />
-                            </td>
-                            <td>
-                              <button
-                                type="button"
-                                className="btn secondary small"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (onSelectRequest) {
-                                    onSelectRequest(r);
-                                  }
-                                  setPage(st === "Submitted" ? "review" : "requestDetail");
-                                }}
-                              >
-                                View
-                              </button>
                             </td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={7} className="empty-state">
+                        <td colSpan={4} className="empty-state">
                           No document requests found.
                         </td>
                       </tr>

@@ -91,6 +91,18 @@ export function Requirements({
       : 0;
   });
 
+  const totalCount = enriched.length;
+  const approvedCount = enriched.filter((r) => r.status === "Approved").length;
+  const pendingCount = enriched.filter(
+    (r) => r.status === "Pending" || r.status === "Requested"
+  ).length;
+  const revisionCount = enriched.filter(
+    (r) => r.status === "For Revision"
+  ).length;
+  const completionPercentage = totalCount
+    ? Math.round((approvedCount / totalCount) * 100)
+    : 0;
+
   return (
     <>
       <PageHead
@@ -99,16 +111,21 @@ export function Requirements({
       />
 
       <section className="card requirement-summary">
-        <div className="mini-ring">
+        <div
+          className="mini-ring"
+          style={{
+            background: `conic-gradient(var(--blue, #0b4c91) 0 ${completionPercentage}%, #e6edf4 ${completionPercentage}%)`,
+          }}
+        >
           <div>
-            <strong>0%</strong>
+            <strong>{completionPercentage}%</strong>
             <span>Completed</span>
           </div>
         </div>
         {[
-          ["0", "Approved", "green", "check"],
-          ["0", "Pending", "amber", "clock"],
-          ["0", "For Revision", "red", "revision"],
+          [String(approvedCount), "Approved", "green", "check"],
+          [String(pendingCount), "Pending", "amber", "clock"],
+          [String(revisionCount), "For Revision", "red", "revision"],
         ].map((x) => (
           <div className="requirement-metric" key={x[1]}>
             <i className={x[2]}>

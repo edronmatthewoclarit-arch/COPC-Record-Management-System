@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import Modal from "../../components/ui/Modal";
 import UiIcon from "../../components/ui/UiIcon";
 
@@ -310,112 +311,128 @@ export function NewRequestModal({
           </div>
 
           {/* Add Faculty Form (Collapsible/Modal View) */}
-          {showAddFaculty && (
-            <div className="ph-add-faculty-panel">
-              <div className="ph-add-faculty-head">
-                <div>
-                  <h4>Add New Faculty Member</h4>
-                  <small>
-                    Enter faculty credentials. Status defaults to Active.
-                  </small>
-                </div>
-                <button
-                  type="button"
-                  className="icon-btn"
-                  onClick={() => setShowAddFaculty(false)}
-                  aria-label="Close add faculty form"
+          {showAddFaculty &&
+            createPortal(
+              <div
+                className="ph-faculty-modal-overlay"
+                onClick={() => setShowAddFaculty(false)}
+              >
+                <div
+                  className="ph-add-faculty-panel"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  ×
-                </button>
-              </div>
+                  <div className="ph-add-faculty-head">
+                    <div>
+                      <h4>Add New Faculty Member</h4>
+                      <small>
+                        Enter faculty credentials. Status defaults to Active.
+                      </small>
+                    </div>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => setShowAddFaculty(false)}
+                      aria-label="Close add faculty form"
+                    >
+                      ×
+                    </button>
+                  </div>
 
-              {facultyFormError && (
-                <div className="ph-modal-error">{facultyFormError}</div>
-              )}
+                  {facultyFormError && (
+                    <div className="ph-modal-error">{facultyFormError}</div>
+                  )}
 
-              <form onSubmit={handleSaveFaculty}>
-                <div className="form-grid ph-faculty-form-grid">
-                  <label>
-                    Faculty Name *
-                    <input
-                      type="text"
-                      value={newFaculty.name}
-                      onChange={(e) =>
-                        setNewFaculty({ ...newFaculty, name: e.target.value })
-                      }
-                      autoFocus
-                    />
-                  </label>
+                  <form onSubmit={handleSaveFaculty}>
+                    <div className="form-grid ph-faculty-form-grid">
+                      <label>
+                        Faculty Name *
+                        <input
+                          type="text"
+                          value={newFaculty.name}
+                          onChange={(e) =>
+                            setNewFaculty({
+                              ...newFaculty,
+                              name: e.target.value,
+                            })
+                          }
+                          autoFocus
+                        />
+                      </label>
 
-                  <label>
-                    Position *
-                    <input
-                      type="text"
-                      value={newFaculty.position}
-                      onChange={(e) =>
-                        setNewFaculty({
-                          ...newFaculty,
-                          position: e.target.value,
-                        })
-                      }
-                    />
-                  </label>
+                      <label>
+                        Position *
+                        <input
+                          type="text"
+                          value={newFaculty.position}
+                          onChange={(e) =>
+                            setNewFaculty({
+                              ...newFaculty,
+                              position: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
 
-                  <label>
-                    Program *
-                    <input
-                      type="text"
-                      value={newFaculty.program}
-                      onChange={(e) =>
-                        setNewFaculty({
-                          ...newFaculty,
-                          program: e.target.value,
-                        })
-                      }
-                    />
-                  </label>
+                      <label>
+                        Program *
+                        <input
+                          type="text"
+                          value={newFaculty.program}
+                          onChange={(e) =>
+                            setNewFaculty({
+                              ...newFaculty,
+                              program: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
 
-                  <label>
-                    Email *
-                    <input
-                      type="email"
-                      value={newFaculty.email}
-                      onChange={(e) =>
-                        setNewFaculty({ ...newFaculty, email: e.target.value })
-                      }
-                    />
-                  </label>
+                      <label>
+                        Email *
+                        <input
+                          type="email"
+                          value={newFaculty.email}
+                          onChange={(e) =>
+                            setNewFaculty({
+                              ...newFaculty,
+                              email: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
 
-                  <label className="full">
-                    Contact Number *
-                    <input
-                      type="text"
-                      value={newFaculty.contact}
-                      onChange={(e) =>
-                        setNewFaculty({
-                          ...newFaculty,
-                          contact: e.target.value,
-                        })
-                      }
-                    />
-                  </label>
+                      <label className="full">
+                        Contact Number *
+                        <input
+                          type="text"
+                          value={newFaculty.contact}
+                          onChange={(e) =>
+                            setNewFaculty({
+                              ...newFaculty,
+                              contact: e.target.value,
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+
+                    <div className="ph-add-faculty-actions">
+                      <button
+                        type="button"
+                        className="btn secondary"
+                        onClick={() => setShowAddFaculty(false)}
+                      >
+                        Cancel
+                      </button>
+                      <button type="submit" className="btn primary">
+                        Save Faculty
+                      </button>
+                    </div>
+                  </form>
                 </div>
-
-                <div className="ph-add-faculty-actions">
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    onClick={() => setShowAddFaculty(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="btn primary">
-                    Save Faculty
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
+              </div>,
+              document.body
+            )}
 
           {/* Current Faculty Records Table */}
           <div className="ph-faculty-table-container">

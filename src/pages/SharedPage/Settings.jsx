@@ -4,8 +4,6 @@ import PageHead from "../../components/ui/PageHead";
 export function Settings({
   role = "COPC Coordinator",
   user = { name: "Account", initials: "U", email: "" },
-  theme = "light",
-  setTheme,
   onSaveToast,
 }) {
   const [fullName] = useState(user.name || "Account");
@@ -151,81 +149,51 @@ export function Settings({
             </form>
           </section>
 
-          <section className="card form-card appearance-card">
-            <div className="appearance-row">
-              <div>
-                <h2>Appearance</h2>
-                <p>Switch between Light and Dark mode for the workspace.</p>
-              </div>
+          <section className="card form-card account-password-card">
+            <h2>Password</h2>
+            <form onSubmit={handleChangePassword}>
+              <label>
+                Current Password
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  aria-label="Current Password"
+                />
+              </label>
 
-              <div
-                className="theme-toggle-group"
-                role="group"
-                aria-label="Theme mode"
-              >
-                <button
-                  type="button"
-                  className={`theme-option ${theme === "light" ? "active" : ""}`}
-                  onClick={() => setTheme && setTheme("light")}
-                >
-                  ☀ Light
-                </button>
-                <button
-                  type="button"
-                  className={`theme-option ${theme === "dark" ? "active" : ""}`}
-                  onClick={() => setTheme && setTheme("dark")}
-                >
-                  ☾ Dark
-                </button>
-              </div>
-            </div>
+              <label>
+                New Password
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  aria-label="New Password"
+                />
+              </label>
+
+              <label>
+                Confirm New Password
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  aria-label="Confirm New Password"
+                />
+              </label>
+
+              {passwordError && (
+                <p className="login-error" role="alert">
+                  {passwordError}
+                </p>
+              )}
+
+              <button type="submit" className="btn primary change-password-btn">
+                Change Password
+              </button>
+            </form>
           </section>
         </div>
-
-        <section className="card form-card account-password-card">
-          <h2>Password</h2>
-          <form onSubmit={handleChangePassword}>
-            <label>
-              Current Password
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                aria-label="Current Password"
-              />
-            </label>
-
-            <label>
-              New Password
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                aria-label="New Password"
-              />
-            </label>
-
-            <label>
-              Confirm New Password
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                aria-label="Confirm New Password"
-              />
-            </label>
-
-            {passwordError && (
-              <p className="login-error" role="alert">
-                {passwordError}
-              </p>
-            )}
-
-            <button type="submit" className="btn primary change-password-btn">
-              Change Password
-            </button>
-          </form>
-        </section>
       </div>
     </>
   );

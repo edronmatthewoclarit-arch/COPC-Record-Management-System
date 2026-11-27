@@ -7,7 +7,6 @@ import UiIcon from "../../components/ui/UiIcon";
 export function Documents({
   documents = initialDocuments,
   openDocument,
-  openSendFile,
   userRole = "Program Head",
   userProgram = "Information Technology",
 }) {
@@ -85,44 +84,19 @@ export function Documents({
     docs.reverse();
   }
 
-  const pageTitle = isProgramHead ? "Program Documents" : "Documents";
+  const pageTitle = isProgramHead || isSubmitterRole ? "Program Documents" : "Documents";
   const pageSubtitle = isCoordinator
     ? "Centralized submissions from Deans, Faculty Members, and Office Representatives."
     : isProgramHead
       ? `Centralized documents submitted by Deans, Faculty, and Office Representatives for ${userProgram}.`
-      : "Manage, upload, view, and track your COPC document submissions.";
+      : "View and track your COPC document submissions.";
 
   const activeFilterCount =
     (status !== "All" ? 1 : 0) + (roleFilter !== "All" ? 1 : 0);
 
   return (
     <>
-      <PageHead
-        title={pageTitle}
-        subtitle={pageSubtitle}
-        action={
-          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-            {isSubmitterRole && openSendFile && (
-              <button
-                type="button"
-                className="btn primary send-files-action-btn"
-                onClick={openSendFile}
-              >
-                <UiIcon name="upload" />
-                <span>Send files</span>
-              </button>
-            )}
-            <button
-              type="button"
-              className="btn secondary icon-button"
-              onClick={() => alert("Exporting all submitted documents...")}
-            >
-              <UiIcon name="download" />
-              Export Document List
-            </button>
-          </div>
-        }
-      />
+      <PageHead title={pageTitle} subtitle={pageSubtitle} />
 
       <section className="card document-summary">
         {[
@@ -267,10 +241,7 @@ export function Documents({
           <thead>
             <tr>
               <th>Document</th>
-              <th>Related Record</th>
-              <th>Uploaded By</th>
-              <th>Date Uploaded</th>
-              <th>Version</th>
+              <th>Date</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -294,19 +265,8 @@ export function Documents({
                   </div>
                 </td>
                 <td>
-                  <b>{d.requirement}</b>
-                  <small>{d.record || d.name}</small>
-                </td>
-                <td>
-                  <b>{d.uploader}</b>
-                  <small>{d.role || userRole}</small>
-                </td>
-                <td>
                   {d.date}
                   {d.time && <small>{d.time}</small>}
-                </td>
-                <td>
-                  <b>{d.version || "v1"}</b>
                 </td>
                 <td>
                   <Badge status={d.status} />
@@ -316,7 +276,7 @@ export function Documents({
 
             {docs.length === 0 && (
               <tr>
-                <td colSpan={6}>
+                <td colSpan={3}>
                   <div className="requirements-empty">
                     <UiIcon name="file" />
                     <b>No documents found.</b>

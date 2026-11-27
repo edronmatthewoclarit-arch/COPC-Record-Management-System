@@ -218,6 +218,10 @@
 
 /* Dialogs and transient feedback */
 .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 29, 51, 0.55);
+  z-index: 300;
   animation: copc-backdrop-in 180ms ease-out both;
 }
 
@@ -1638,6 +1642,18 @@ aside nav button.active {
   white-space: nowrap;
 }
 
+.ph-faculty-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 29, 51, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: copc-backdrop-in 180ms ease-out both;
+}
+
 .ph-add-faculty-panel {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -1645,6 +1661,9 @@ aside nav button.active {
   padding: 16px;
   margin-bottom: 16px;
   animation: copc-modal-in 0.25s ease;
+  width: 100%;
+  max-width: 520px;
+  box-sizing: border-box;
 }
 
 .ph-add-faculty-head {

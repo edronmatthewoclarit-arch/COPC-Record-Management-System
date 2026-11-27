@@ -11,17 +11,7 @@ import Stat from "../../components/ui/Stat";
         <PageHead
           title="Dashboard"
           subtitle={role}
-          action={
-            role === "Program Head" && openNewRequest ? (
-              <button
-                type="button"
-                className="btn primary"
-                onClick={openNewRequest}
-              >
-                ＋ New request
-              </button>
-            ) : null
-          }
+          action={null}
         />
 
         <div className="stats">

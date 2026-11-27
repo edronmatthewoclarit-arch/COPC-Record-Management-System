@@ -152,17 +152,7 @@ export function App() {
     <div className="app">
       <Header
         role={currentRole}
-        notify={notify}
-        onNotify={() => setNotify(!notify)}
         onLogout={() => setModal("logout")}
-        onSettings={() => setPage("settings")}
-        notices={notices}
-        markAll={markAll}
-        openNotice={openNotice}
-        viewAll={() => {
-          setNotify(false);
-          setPage("notifications");
-        }}
       />
 
       <Sidebar role={currentRole} page={page} setPage={setPage} />
@@ -340,8 +330,6 @@ export function App() {
             <Settings
               role={currentRole}
               user={user}
-              theme={theme}
-              setTheme={setTheme}
               onSaveToast={done}
             />
           )}

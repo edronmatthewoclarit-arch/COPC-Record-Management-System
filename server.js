@@ -4,18 +4,23 @@ const swaggerJsdoc = require('swagger-jsdoc');
 const cors = require('cors');
 const path = require('path');
 const pool = require('./src/db');
+const { attachUserIfPresent } = require('./src/utils/authToken');
 
 // Import modular routes
 const userRoutes = require('./src/routes/userRoutes');
+const authRoutes = require('./src/routes/authRoutes');
 const documentRoutes = require('./src/routes/documentRoutes');
 const requirementRoutes = require('./src/routes/requirementRoutes');
+const representativeRoutes = require('./src/routes/representativeRoutes');
+const copcRoutes = require('./src/routes/copcRoutes');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
 app.use(cors());
+app.use(attachUserIfPresent);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'))); // Exposes uploaded files & profile photos
 
 // Root route
@@ -46,10 +51,13 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 // ---------------------
 
 // Mount Modular Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/records', documentRoutes); // Alias for records pointing to documents endpoint
 app.use('/api/requirements', requirementRoutes);
+app.use('/api/representatives', representativeRoutes);
+app.use('/api', copcRoutes);
 
 // Start server
 app.listen(PORT, () => {

@@ -6485,27 +6485,54 @@ nav button.active {
   font-size: 28px;
   font-weight: 700;
   color: #17365c;
-  margin: 0 0 4px;
+  margin: 0 0 6px;
+  line-height: 1.2;
 }
 
 .login-form-head p {
-  font-size: 13px;
+  font-size: 13.5px;
   color: #647b95;
-  margin: 0 0 20px;
+  margin: 0 0 22px;
+  line-height: 1.5;
+}
+
+.login-form-panel form > label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #17365c;
+  margin: 14px 0 6px;
+  text-align: left;
 }
 
 .login-field {
   background: #f8fafc;
   border: 1px solid #d1d9e6;
   border-radius: 10px;
-  height: 50px;
+  height: 48px;
   display: flex;
   align-items: center;
-  margin: 8px 0;
+  margin: 0;
   overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.login-field>i {
+.login-field:focus-within {
+  border-color: #211C70;
+  box-shadow: 0 0 0 3px rgba(33, 28, 112, 0.08);
+  background: #ffffff;
+}
+
+.login-field.role-dropdown-trigger {
+  width: 100%;
+  padding: 0 16px;
+  justify-content: space-between;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.login-field > i {
   width: 36px;
   flex: 0 0 auto;
   text-align: center;
@@ -6517,13 +6544,12 @@ nav button.active {
 .login-field select {
   flex: 1;
   width: 100%;
-  padding: 0 12px;
+  padding: 0 16px;
   border: 0;
   background: transparent;
   color: #17365c;
   font-size: 13px;
   outline: none;
-  /* Allow inputs to shrink within grid column */
   min-width: 0;
 }
 
@@ -6533,23 +6559,26 @@ nav button.active {
 }
 
 .login-toggle {
-  width: 28px;
-  height: 28px;
-  border: 1px solid #d1d9e6;
+  width: auto;
+  height: auto;
+  border: 0;
   background: transparent;
-  border-radius: 50%;
-  color: #647b95;
-  font-size: 11px;
+  border-radius: 6px;
+  color: #211C70;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  padding: 0;
-  display: flex;
+  padding: 6px 14px;
+  margin-right: 4px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .login-toggle:hover {
-  border-color: #075cb6;
-  color: #075cb6;
+  background: rgba(33, 28, 112, 0.06);
+  color: #17365c;
 }
 
 .login-submit {

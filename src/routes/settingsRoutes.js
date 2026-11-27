@@ -27,8 +27,10 @@ router.get('/:userId', async (req, res) => {
 
   try {
     const user = await pool.query(
-      `SELECT user_id, name, email, contact_number, office_name, position
-       FROM copc_schema.users WHERE user_id = $1;`,
+      `SELECT u.user_id, u.name, c.email, u.contact_number, u.office_name, u.position
+       FROM copc_schema.users u
+       JOIN copc_schema.user_credentials c ON c.user_id = u.user_id
+       WHERE u.user_id = $1;`,
       [userId]
     );
     if (!user.rows[0]) return res.status(404).json({ error: 'User not found.' });
@@ -180,13 +182,20 @@ router.patch('/:userId', async (req, res) => {
       );
       if (primaryEmail || primaryPhone) {
         await client.query(
-          `UPDATE copc_schema.users
+          `UPDATE copc_schema.user_credentials
            SET email = COALESCE($1, email),
-               contact_number = COALESCE($2, contact_number),
-               updated_at = CURRENT_TIMESTAMP
-           WHERE user_id = $3;`,
-          [primaryEmail?.contact_value.trim() || null, primaryPhone?.contact_value.trim() || null, userId]
+               updated_at = CASE WHEN $1 IS NOT NULL THEN CURRENT_TIMESTAMP ELSE updated_at END
+           WHERE user_id = $2;`,
+          [primaryEmail?.contact_value.trim() || null, userId]
         );
+        if (primaryPhone) {
+          await client.query(
+            `UPDATE copc_schema.users
+             SET contact_number = $1, updated_at = CURRENT_TIMESTAMP
+             WHERE user_id = $2;`,
+            [primaryPhone.contact_value.trim(), userId]
+          );
+        }
       }
       await client.query('DELETE FROM copc_schema.user_contacts WHERE user_id = $1;', [userId]);
       for (const contact of contacts) {
@@ -202,6 +211,9 @@ router.patch('/:userId', async (req, res) => {
     res.json({ message: 'User settings updated successfully.' });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'That email address is already in use.' });
+    }
     console.error(err.message);
     res.status(500).json({ error: 'Server error while updating user settings.' });
   } finally {

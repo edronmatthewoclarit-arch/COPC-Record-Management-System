@@ -17,8 +17,6 @@ CREATE TABLE IF NOT EXISTS copc_schema.users (
     user_id SERIAL PRIMARY KEY,
     program_id INT NULL,
     name VARCHAR(150) NOT NULL,
-    email VARCHAR(150) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
     role VARCHAR(50) NOT NULL CHECK (role IN (
         'COPC Coordinator',
         'Program Head',
@@ -38,6 +36,21 @@ CREATE TABLE IF NOT EXISTS copc_schema.users (
         REFERENCES copc_schema.programs(program_id)
         ON DELETE SET NULL
 );
+
+-- Authentication details are separate from user profile information.
+CREATE TABLE IF NOT EXISTS copc_schema.user_credentials (
+    user_id INT PRIMARY KEY,
+    email VARCHAR(150) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id)
+        REFERENCES copc_schema.users(user_id)
+        ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_credentials_email_lower
+    ON copc_schema.user_credentials (LOWER(email));
 
 -- 3. COPC requirements
 CREATE TABLE IF NOT EXISTS copc_schema.requirements (

@@ -21,9 +21,11 @@ function getInitials(name = '') {
 const getAllUsers = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT user_id, name, email, role, profile_photo, account_status,
-              contact_number, office_name, position, created_at
-       FROM copc_schema.users ORDER BY user_id ASC;`
+      `SELECT u.user_id, u.name, c.email, u.role, u.profile_photo, u.account_status,
+              u.contact_number, u.office_name, u.position, u.created_at
+       FROM copc_schema.users u
+       JOIN copc_schema.user_credentials c ON c.user_id = u.user_id
+       ORDER BY u.user_id ASC;`
     );
     res.json(result.rows);
   } catch (err) {
@@ -48,34 +50,53 @@ const registerUser = async (req, res) => {
     }
 
     // Check if email already exists
-    const existing = await pool.query('SELECT user_id FROM copc_schema.users WHERE LOWER(email) = LOWER($1);', [
-      normalizedEmail,
-    ]);
-    if (existing.rows.length > 0) {
-      return res.status(400).json({ error: 'Email is already registered.' });
-    }
-
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const existing = await client.query(
+        'SELECT user_id FROM copc_schema.user_credentials WHERE LOWER(email) = LOWER($1);',
+        [normalizedEmail]
+      );
+      if (existing.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({ error: 'Email is already registered.' });
+      }
 
-    const query = `
-      INSERT INTO copc_schema.users
-        (name, email, password_hash, role, program_id, contact_number, office_name, position)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING user_id, name, email, role, program_id, contact_number, office_name, position, account_status, created_at;
-    `;
-    const result = await pool.query(query, [
-      name.trim(),
-      normalizedEmail,
-      hashedPassword,
-      resolvedRole,
-      program_id || null,
-      contact_number || null,
-      office_name || null,
-      position || null,
-    ]);
+      const created = await client.query(
+        `INSERT INTO copc_schema.users
+           (name, role, program_id, contact_number, office_name, position)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING user_id, name, role, program_id, contact_number, office_name, position,
+                   account_status, created_at;`,
+        [
+          name.trim(),
+          resolvedRole,
+          program_id || null,
+          contact_number || null,
+          office_name || null,
+          position || null,
+        ]
+      );
+      const user = created.rows[0];
+      await client.query(
+        `INSERT INTO copc_schema.user_credentials (user_id, email, password_hash)
+         VALUES ($1, $2, $3);`,
+        [user.user_id, normalizedEmail, hashedPassword]
+      );
+      await client.query('COMMIT');
 
-    res.status(201).json({ message: 'User registered successfully', user: result.rows[0] });
+      res.status(201).json({ message: 'User registered successfully', user: { ...user, email: normalizedEmail } });
+    } catch (err) {
+      await client.query('ROLLBACK').catch(() => {});
+      if (err.code === '23505') {
+        return res.status(400).json({ error: 'Email is already registered.' });
+      }
+      throw err;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error while registering user.' });
@@ -93,10 +114,11 @@ const loginUser = async (req, res) => {
     }
 
     const result = await pool.query(
-      `SELECT u.*, p.program_name
+      `SELECT u.*, c.email, c.password_hash, p.program_name
        FROM copc_schema.users u
+       JOIN copc_schema.user_credentials c ON c.user_id = u.user_id
        LEFT JOIN copc_schema.programs p ON u.program_id = p.program_id
-       WHERE LOWER(u.email) = LOWER($1);`,
+       WHERE LOWER(c.email) = LOWER($1);`,
       [normalizedEmail]
     );
     if (result.rows.length === 0) {
@@ -157,19 +179,26 @@ const updateProfilePhoto = async (req, res) => {
     // Normalize path separators for URLs
     const photoPath = req.file.path.replace(/\\/g, '/');
 
-    const query = `
-      UPDATE copc_schema.users
-      SET profile_photo = $1, profile_photo_path = $1, updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $2
-      RETURNING user_id, name, email, role, profile_photo;
-    `;
-    const result = await pool.query(query, [photoPath, user_id]);
+    const updated = await pool.query(
+      `UPDATE copc_schema.users
+       SET profile_photo = $1, profile_photo_path = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $2
+       RETURNING user_id;`,
+      [photoPath, user_id]
+    );
 
-    if (result.rows.length === 0) {
+    if (updated.rows.length === 0) {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    res.json({ message: 'Profile photo updated successfully', user: result.rows[0] });
+    const user = await pool.query(
+      `SELECT u.user_id, u.name, c.email, u.role, u.profile_photo
+       FROM copc_schema.users u
+       JOIN copc_schema.user_credentials c ON c.user_id = u.user_id
+       WHERE u.user_id = $1;`,
+      [user_id]
+    );
+    res.json({ message: 'Profile photo updated successfully', user: user.rows[0] });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error while updating profile photo.' });
@@ -190,7 +219,13 @@ const updatePassword = async (req, res) => {
     }
 
     // Fetch existing user hash
-    const userResult = await pool.query('SELECT * FROM copc_schema.users WHERE user_id = $1;', [user_id]);
+    const userResult = await pool.query(
+      `SELECT u.user_id, c.password_hash
+       FROM copc_schema.users u
+       JOIN copc_schema.user_credentials c ON c.user_id = u.user_id
+       WHERE u.user_id = $1;`,
+      [user_id]
+    );
     if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found.' });
     }
@@ -208,7 +243,9 @@ const updatePassword = async (req, res) => {
     const newHashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     await pool.query(
-      'UPDATE copc_schema.users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE user_id = $2;',
+      `UPDATE copc_schema.user_credentials
+       SET password_hash = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $2;`,
       [newHashedPassword, user_id]
     );
 

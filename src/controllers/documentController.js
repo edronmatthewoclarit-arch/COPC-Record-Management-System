@@ -1,4 +1,5 @@
 const pool = require('../db');
+const { notifyRoles, notifyUsers } = require('../utils/notifications');
 
 function formatFileSize(bytes) {
   const num = Number(bytes);
@@ -13,7 +14,7 @@ function formatDocRow(row) {
   return {
     ...row,
     id: row.document_id,
-    name: row.file_name,
+    name: row.document_name || row.file_name,
     requirement: row.requirement_name || 'General',
     record: row.record_name || row.file_name,
     uploader: row.uploader_name || 'Account',
@@ -30,7 +31,7 @@ function formatDocRow(row) {
     }),
     version: `v${row.version_number || 1}`,
     size: formatFileSize(row.file_size_bytes),
-    remark: row.latest_remark || '',
+    remark: row.latest_remark || row.notes || '',
     file_url: normalizedPath ? `/${normalizedPath.replace(/^\.?\//, '')}` : '',
   };
 }
@@ -44,12 +45,17 @@ async function fetchFormattedDocumentById(clientOrPool, documentId) {
       u.name AS uploader_name,
       u.role AS uploader_role,
       p.program_name,
-      (
-        SELECT dr.comments
-        FROM copc_schema.document_reviews dr
-        WHERE dr.document_id = d.document_id
-        ORDER BY dr.reviewed_at DESC, dr.review_id DESC
-        LIMIT 1
+      COALESCE(
+        (SELECT dc.comment
+         FROM copc_schema.document_comments dc
+         WHERE dc.document_id = d.document_id
+         ORDER BY dc.created_at DESC, dc.comment_id DESC
+         LIMIT 1),
+        (SELECT dr.comments
+         FROM copc_schema.document_reviews dr
+         WHERE dr.document_id = d.document_id
+         ORDER BY dr.reviewed_at DESC, dr.review_id DESC
+         LIMIT 1)
       ) AS latest_remark
     FROM copc_schema.documents d
     LEFT JOIN copc_schema.requirement_records rr ON d.record_id = rr.record_id
@@ -73,12 +79,17 @@ const getAllRecords = async (req, res) => {
         u.name AS uploader_name,
         u.role AS uploader_role,
         p.program_name,
-        (
-          SELECT dr.comments
-          FROM copc_schema.document_reviews dr
-          WHERE dr.document_id = d.document_id
-          ORDER BY dr.reviewed_at DESC, dr.review_id DESC
-          LIMIT 1
+        COALESCE(
+          (SELECT dc.comment
+           FROM copc_schema.document_comments dc
+           WHERE dc.document_id = d.document_id
+           ORDER BY dc.created_at DESC, dc.comment_id DESC
+           LIMIT 1),
+          (SELECT dr.comments
+           FROM copc_schema.document_reviews dr
+           WHERE dr.document_id = d.document_id
+           ORDER BY dr.reviewed_at DESC, dr.review_id DESC
+           LIMIT 1)
         ) AS latest_remark
       FROM copc_schema.documents d
       LEFT JOIN copc_schema.requirement_records rr ON d.record_id = rr.record_id
@@ -106,7 +117,10 @@ const uploadDocument = async (req, res) => {
       requirement,
       record,
       documentName,
+      document_name,
       name,
+      notes,
+      remarks,
       uploader,
       role,
     } = req.body;
@@ -209,14 +223,16 @@ const uploadDocument = async (req, res) => {
 
     const insertQuery = `
       INSERT INTO copc_schema.documents
-      (record_id, uploaded_by, previous_version_id, file_name, file_path, file_type, file_size_bytes, version_number, status)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'For Review')
+      (record_id, uploaded_by, previous_version_id, document_name, notes, file_name, file_path, file_type, file_size_bytes, version_number, status)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'For Review')
       RETURNING document_id;
     `;
     const insertResult = await client.query(insertQuery, [
       resolvedRecordId,
       resolvedUploadedBy,
       previousDoc?.document_id || null,
+      String(document_name || documentName || name || fileName).trim(),
+      String(notes || remarks || '').trim() || null,
       fileName,
       filePath,
       fileType,
@@ -231,6 +247,15 @@ const uploadDocument = async (req, res) => {
        VALUES ($1, $2, $3, $4);`,
       [resolvedUploadedBy, 'Document Uploaded', `Uploaded ${fileName} (v${nextVersion})`, newDocId]
     );
+
+    await notifyRoles({
+      roles: ['COPC Coordinator', 'Program Head', 'Dean'],
+      title: 'New document submission',
+      message: `${fileName} was submitted for review.`,
+      type: 'New Submission',
+      documentId: newDocId,
+      db: client,
+    }, resolvedUploadedBy);
 
     const formatted = await fetchFormattedDocumentById(client, newDocId);
     await client.query('COMMIT');
@@ -253,7 +278,12 @@ const reviewDocument = async (req, res) => {
     const { reviewer_id, decision, status, comments, remarks } = req.body;
 
     const rawDecision = decision || status;
-    const normalizedDecision = rawDecision === 'Revision' ? 'For Revision' : rawDecision;
+    const statusAliases = {
+      Revision: 'For Revision',
+      Pending: 'For Review',
+      Submitted: 'For Review',
+    };
+    const normalizedDecision = statusAliases[rawDecision] || rawDecision;
     const validDecisions = ['Approved', 'For Revision', 'Rejected'];
     const validDocStatuses = [...validDecisions, 'For Review', 'Requested'];
 
@@ -264,7 +294,7 @@ const reviewDocument = async (req, res) => {
     await client.query('BEGIN');
 
     const existingDoc = await client.query(
-      'SELECT document_id, file_name FROM copc_schema.documents WHERE document_id = $1;',
+      'SELECT document_id, file_name, uploaded_by FROM copc_schema.documents WHERE document_id = $1;',
       [document_id]
     );
     if (existingDoc.rows.length === 0) {
@@ -292,9 +322,20 @@ const reviewDocument = async (req, res) => {
     }
 
     await client.query(
-      'UPDATE copc_schema.documents SET status = $1 WHERE document_id = $2;',
+      'UPDATE copc_schema.documents SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE document_id = $2;',
       [normalizedDecision, document_id]
     );
+
+    if (validDecisions.includes(normalizedDecision)) {
+      await notifyUsers({
+        userIds: [existingDoc.rows[0].uploaded_by],
+        title: normalizedDecision === 'For Revision' ? 'Revision requested' : 'Document review update',
+        message: `${existingDoc.rows[0].file_name} was marked ${normalizedDecision}.${reviewText ? ` ${reviewText}` : ''}`,
+        type: normalizedDecision === 'For Revision' ? 'Revision Request' : 'Document Approval',
+        documentId: document_id,
+        db: client,
+      });
+    }
 
     await client.query(
       `INSERT INTO copc_schema.activity_logs (user_id, action, description, related_document_id)

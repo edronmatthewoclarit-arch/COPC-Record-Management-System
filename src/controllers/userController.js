@@ -21,7 +21,9 @@ function getInitials(name = '') {
 const getAllUsers = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT user_id, name, email, role, profile_photo, account_status, created_at FROM copc_schema.users ORDER BY user_id ASC;'
+      `SELECT user_id, name, email, role, profile_photo, account_status,
+              contact_number, office_name, position, created_at
+       FROM copc_schema.users ORDER BY user_id ASC;`
     );
     res.json(result.rows);
   } catch (err) {
@@ -33,7 +35,7 @@ const getAllUsers = async (req, res) => {
 // 2. Register User / Add Representative Modal
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, program_id } = req.body;
+    const { name, email, password, role, program_id, contact_number, office_name, position } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
@@ -57,9 +59,10 @@ const registerUser = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const query = `
-      INSERT INTO copc_schema.users (name, email, password_hash, role, program_id)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING user_id, name, email, role, program_id, account_status, created_at;
+      INSERT INTO copc_schema.users
+        (name, email, password_hash, role, program_id, contact_number, office_name, position)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING user_id, name, email, role, program_id, contact_number, office_name, position, account_status, created_at;
     `;
     const result = await pool.query(query, [
       name.trim(),
@@ -67,6 +70,9 @@ const registerUser = async (req, res) => {
       hashedPassword,
       resolvedRole,
       program_id || null,
+      contact_number || null,
+      office_name || null,
+      position || null,
     ]);
 
     res.status(201).json({ message: 'User registered successfully', user: result.rows[0] });

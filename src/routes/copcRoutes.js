@@ -5,6 +5,7 @@ const fs = require('fs');
 const router = express.Router();
 const pool = require('../db');
 const { getAllRecords, uploadDocument, formatDocRow } = require('../controllers/documentController');
+const { notifyUsers } = require('../utils/notifications');
 
 const uploadDir = './uploads';
 if (!fs.existsSync(uploadDir)) {
@@ -19,7 +20,21 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage, limits: { fileSize: 15 * 1024 * 1024 } });
+const allowedMimeTypes = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+]);
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    if (allowedMimeTypes.has(file.mimetype)) return cb(null, true);
+    cb(new Error('Only PDF, DOC, DOCX, JPG, or PNG files are allowed.'));
+  },
+  limits: { fileSize: 15 * 1024 * 1024 },
+});
 
 function formatTimeAgo(dateVal) {
   if (!dateVal) return 'Just now';
@@ -112,8 +127,8 @@ router.get('/program-head/dashboard', async (req, res) => {
   try {
     const reqStats = await pool.query(
       `SELECT
-         COUNT(*) FILTER (WHERE status = 'Open')::int AS pending_requests,
-         COUNT(*) FILTER (WHERE status = 'Submitted')::int AS submitted
+         COUNT(*) FILTER (WHERE status IN ('Open', 'Requested', 'For Revision'))::int AS pending_requests,
+         COUNT(*) FILTER (WHERE status IN ('Submitted', 'Resubmitted'))::int AS submitted
        FROM copc_schema.document_requests;`
     );
     const docStats = await pool.query(
@@ -173,13 +188,16 @@ router.put('/program-head/documents/:id/resubmit', upload.single('file'), async 
 
     const inserted = await client.query(
       `INSERT INTO copc_schema.documents
-       (record_id, uploaded_by, previous_version_id, file_name, file_path, file_type, file_size_bytes, version_number, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'For Review')
+       (record_id, uploaded_by, previous_version_id, document_name, notes,
+        file_name, file_path, file_type, file_size_bytes, version_number, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'For Review')
        RETURNING *;`,
       [
         prev.record_id,
         req.user?.user_id || prev.uploaded_by,
         prev.document_id,
+        prev.document_name || prev.file_name,
+        prev.notes,
         fileName,
         filePath,
         req.file?.mimetype || prev.file_type,
@@ -222,8 +240,8 @@ async function listRequests(req, res) {
     const formatted = result.rows.map((row) => ({
       id: row.request_id,
       request_id: row.request_id,
-      title: row.record_name || row.requirement_name || 'Document Request',
-      documentName: row.record_name || row.requirement_name || 'Document Request',
+      title: row.document_name || row.record_name || row.requirement_name || 'Document Request',
+      documentName: row.document_name || row.record_name || row.requirement_name || 'Document Request',
       requestedDocument: row.requirement_name || 'COPC Requirement',
       requestedBy: row.assigned_to_name || row.requested_by_name || 'Representative',
       uploader: row.assigned_to_name || row.requested_by_name || 'Representative',
@@ -243,6 +261,9 @@ async function listRequests(req, res) {
       status: row.status === 'Open' ? 'Requested' : row.status,
       lastActivity: formatTimeAgo(row.created_at),
       details: row.request_message || '',
+      attachment_path: row.attachment_path,
+      attachment_name: row.attachment_name,
+      updated_at: row.updated_at,
     }));
 
     res.json(formatted);
@@ -253,21 +274,23 @@ async function listRequests(req, res) {
 }
 
 async function createRequest(req, res) {
+  const client = await pool.connect();
   try {
-    const { requirement_id, requirement, record_id, requested_by, assigned_to, recipient, request_message, remarks, due_date } =
+    await client.query('BEGIN');
+    const { requirement_id, requirement, record_id, requested_by, assigned_to, recipient, request_message, remarks, due_date, document_name } =
       req.body;
 
     let reqId = requirement_id ? Number(requirement_id) : null;
     if (!reqId) {
       const reqName = String(requirement || 'Faculty Information').trim();
-      const reqRow = await pool.query(
+      const reqRow = await client.query(
         'SELECT requirement_id FROM copc_schema.requirements WHERE LOWER(requirement_name) = LOWER($1) LIMIT 1;',
         [reqName]
       );
       if (reqRow.rows[0]) {
         reqId = reqRow.rows[0].requirement_id;
       } else {
-        const createdReq = await pool.query(
+        const createdReq = await client.query(
           `INSERT INTO copc_schema.requirements (requirement_name, description, category)
            VALUES ($1, $2, 'Other') RETURNING requirement_id;`,
           [reqName, `Documents for ${reqName}`]
@@ -278,8 +301,9 @@ async function createRequest(req, res) {
 
     let requestedById = requested_by ? Number(requested_by) : req.user?.user_id || null;
     if (!requestedById) {
-      const u = await pool.query('SELECT user_id FROM copc_schema.users ORDER BY user_id ASC LIMIT 1;');
+      const u = await client.query('SELECT user_id FROM copc_schema.users ORDER BY user_id ASC LIMIT 1;');
       if (!u.rows[0]) {
+        await client.query('ROLLBACK');
         return res.status(400).json({ error: 'No user found to create request.' });
       }
       requestedById = u.rows[0].user_id;
@@ -288,25 +312,46 @@ async function createRequest(req, res) {
     let assignedToId = assigned_to ? Number(assigned_to) : null;
     if (!assignedToId && recipient) {
       const cleanName = String(recipient).split('—')[0].trim();
-      const u = await pool.query(
+      const u = await client.query(
         'SELECT user_id FROM copc_schema.users WHERE LOWER(name) = LOWER($1) LIMIT 1;',
         [cleanName]
       );
       assignedToId = u.rows[0]?.user_id || null;
     }
 
-    const inserted = await pool.query(
+    const inserted = await client.query(
       `INSERT INTO copc_schema.document_requests
-       (requirement_id, record_id, requested_by, assigned_to, request_message, due_date, status)
-       VALUES ($1, $2, $3, $4, $5, $6, 'Open')
+       (requirement_id, record_id, requested_by, assigned_to, request_message, document_name, due_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'Open')
        RETURNING *;`,
-      [reqId, record_id || null, requestedById, assignedToId, request_message || remarks || '', due_date || null]
+      [reqId, record_id || null, requestedById, assignedToId, request_message || remarks || '',
+        document_name || null, due_date || null]
     );
 
+    if (assignedToId) {
+      await notifyUsers({
+        userIds: [assignedToId],
+        title: 'New document request',
+        message: document_name || request_message || remarks || 'A document has been requested from you.',
+        type: 'Document Request',
+        requestId: inserted.rows[0].request_id,
+        db: client,
+      });
+    }
+
+    await client.query(
+      `INSERT INTO copc_schema.activity_logs (user_id, action, description)
+       VALUES ($1, 'Document Request Created', $2);`,
+      [requestedById, `Created document request #${inserted.rows[0].request_id}.`]
+    );
+    await client.query('COMMIT');
     res.status(201).json({ message: 'Document request created', request: inserted.rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
     console.error(err.message);
     res.status(500).json({ error: 'Server error while creating document request.' });
+  } finally {
+    client.release();
   }
 }
 
@@ -331,19 +376,47 @@ router.get('/program-head/requests/:id', async (req, res) => {
 });
 
 router.post('/program-head/requests/:id/submit', upload.single('file'), async (req, res) => {
+  const client = await pool.connect();
   try {
     const reqId = Number(req.params.id);
-    const updated = await pool.query(
-      `UPDATE copc_schema.document_requests SET status = 'Submitted' WHERE request_id = $1 RETURNING *;`,
-      [reqId]
+    if (!Number.isInteger(reqId) || reqId < 1) {
+      return res.status(400).json({ error: 'Invalid request ID.' });
+    }
+    await client.query('BEGIN');
+    const updated = await client.query(
+      `UPDATE copc_schema.document_requests
+       SET status = 'Submitted',
+           attachment_path = COALESCE($1, attachment_path),
+           attachment_name = COALESCE($2, attachment_name),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE request_id = $3 RETURNING *;`,
+      [req.file?.path.replace(/\\/g, '/') || null, req.file?.originalname || null, reqId]
     );
     if (updated.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Request not found.' });
     }
+    await notifyUsers({
+      userIds: [updated.rows[0].requested_by],
+      title: 'Document request submitted',
+      message: updated.rows[0].document_name || updated.rows[0].request_message || 'The requested document was submitted.',
+      type: 'New Submission',
+      requestId: reqId,
+      db: client,
+    });
+    await client.query(
+      `INSERT INTO copc_schema.activity_logs (user_id, action, description)
+       VALUES ($1, 'Document Request Submitted', $2);`,
+      [req.user?.user_id || updated.rows[0].assigned_to, `Submitted document request #${reqId}.`]
+    );
+    await client.query('COMMIT');
     res.json({ message: 'Request document submitted', request: updated.rows[0] });
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
     console.error(err.message);
     res.status(500).json({ error: 'Server error while submitting request document.' });
+  } finally {
+    client.release();
   }
 });
 

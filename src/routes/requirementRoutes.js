@@ -31,7 +31,7 @@ router.get('/', async (req, res) => {
          ORDER BY d.version_number DESC, d.document_id DESC
          LIMIT 1
        ) latest_doc ON TRUE
-       LEFT JOIN copc_schema.users u ON latest_doc.uploaded_by = u.user_id
+       LEFT JOIN copc_schema.users u ON rr.assigned_to = u.user_id
        ORDER BY rr.record_id ASC;`
     );
 
@@ -45,6 +45,9 @@ router.get('/', async (req, res) => {
         id: rec.record_id,
         name: rec.record_name,
         description: rec.description,
+        requirement_type: rec.requirement_type,
+        assigned_to: rec.assigned_to,
+        active_status: rec.status,
         file: rec.file_name || null,
         size: rec.file_size_bytes
           ? `${(Number(rec.file_size_bytes) / (1024 * 1024)).toFixed(1)} MB`
@@ -71,6 +74,8 @@ router.get('/', async (req, res) => {
         ...r,
         id: r.requirement_id,
         name: r.requirement_name,
+        responsible: r.responsible_role,
+        year: r.academic_year,
         recordCount: records.length,
         progress,
         records,
@@ -113,7 +118,7 @@ router.get('/:id', async (req, res) => {
          ORDER BY d.version_number DESC, d.document_id DESC
          LIMIT 1
        ) latest_doc ON TRUE
-       LEFT JOIN copc_schema.users u ON latest_doc.uploaded_by = u.user_id
+       LEFT JOIN copc_schema.users u ON rr.assigned_to = u.user_id
        WHERE rr.requirement_id = $1
        ORDER BY rr.record_id ASC;`,
       [reqId]
@@ -122,11 +127,73 @@ router.get('/:id', async (req, res) => {
       ...requirement,
       id: requirement.requirement_id,
       name: requirement.requirement_name,
+      responsible: requirement.responsible_role,
+      year: requirement.academic_year,
       records: recordsResult.rows,
     });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: 'Server error while fetching requirement.' });
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const {
+    requirement_name, name, description, category, program_id,
+    academic_year, year, responsible_role, responsible, is_required, is_active,
+  } = req.body;
+  const resolvedName = requirement_name ?? name;
+  const resolvedYear = academic_year !== undefined ? academic_year : year;
+  const resolvedRole = responsible_role !== undefined ? responsible_role : responsible;
+
+  if (!Number.isInteger(id) || id < 1) return res.status(400).json({ error: 'Invalid requirement ID.' });
+  if (resolvedName !== undefined && !String(resolvedName).trim()) {
+    return res.status(400).json({ error: 'Requirement name cannot be empty.' });
+  }
+  if (program_id !== undefined && program_id !== null &&
+      (!Number.isInteger(Number(program_id)) || Number(program_id) < 1)) {
+    return res.status(400).json({ error: 'program_id must be a positive integer or null.' });
+  }
+  if (is_required !== undefined && typeof is_required !== 'boolean') {
+    return res.status(400).json({ error: 'is_required must be a boolean.' });
+  }
+  if (is_active !== undefined && typeof is_active !== 'boolean') {
+    return res.status(400).json({ error: 'is_active must be a boolean.' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE copc_schema.requirements
+       SET requirement_name = CASE WHEN $1 THEN $2 ELSE requirement_name END,
+           description = CASE WHEN $3 THEN $4 ELSE description END,
+           category = CASE WHEN $5 THEN $6 ELSE category END,
+           program_id = CASE WHEN $7 THEN $8::int ELSE program_id END,
+           academic_year = CASE WHEN $9 THEN $10 ELSE academic_year END,
+           responsible_role = CASE WHEN $11 THEN $12 ELSE responsible_role END,
+           is_required = COALESCE($13, is_required),
+           is_active = COALESCE($14, is_active),
+           updated_at = CURRENT_TIMESTAMP
+       WHERE requirement_id = $15
+       RETURNING *;`,
+      [
+        resolvedName !== undefined, resolvedName === undefined ? null : String(resolvedName).trim(),
+        description !== undefined, description ?? null,
+        category !== undefined, category === undefined ? null : String(category).trim(),
+        program_id !== undefined, program_id === null ? null : Number(program_id),
+        resolvedYear !== undefined, resolvedYear ?? null,
+        resolvedRole !== undefined, resolvedRole ?? null,
+        is_required ?? null, is_active ?? null, id,
+      ]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: 'Requirement not found.' });
+    res.json(result.rows[0]);
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'A requirement with this name already exists.' });
+    }
+    console.error(err.message);
+    res.status(500).json({ error: 'Server error while updating requirement.' });
   }
 });
 
@@ -136,7 +203,17 @@ router.post('/', async (req, res) => {
     const requirementName = (req.body.requirement_name || req.body.name || '').trim();
     const description = (req.body.description || '').trim();
     const category = (req.body.category || 'Other').trim();
-    const isRequired = req.body.is_required !== undefined ? Boolean(req.body.is_required) : true;
+    const isRequired = req.body.is_required !== undefined ? req.body.is_required : true;
+    const programId = req.body.program_id ? Number(req.body.program_id) : null;
+    const academicYear = req.body.academic_year || req.body.year || null;
+    const responsibleRole = req.body.responsible_role || req.body.responsible || null;
+
+    if (typeof isRequired !== 'boolean') {
+      return res.status(400).json({ error: 'is_required must be a boolean.' });
+    }
+    if (programId !== null && (!Number.isInteger(programId) || programId < 1)) {
+      return res.status(400).json({ error: 'program_id must be a positive integer.' });
+    }
 
     if (!requirementName) {
       return res.status(400).json({ error: 'Requirement name is required.' });
@@ -151,18 +228,19 @@ router.post('/', async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO copc_schema.requirements (requirement_name, description, category, is_required)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO copc_schema.requirements
+         (requirement_name, description, category, program_id, academic_year, responsible_role, is_required)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *;`,
-      [requirementName, description, category, isRequired]
+      [requirementName, description, category, programId, academicYear, responsibleRole, isRequired]
     );
     const created = result.rows[0];
     res.status(201).json({
       ...created,
       id: created.requirement_id,
       name: created.requirement_name,
-      responsible: req.body.responsible || 'Program Head',
-      year: req.body.year || '2026–2027',
+      responsible: created.responsible_role,
+      year: created.academic_year,
       records: [],
       recordCount: 0,
       progress: 0,
@@ -179,9 +257,25 @@ router.post('/:id/records', async (req, res) => {
     const requirementId = Number(req.params.id);
     const recordName = (req.body.record_name || req.body.name || '').trim();
     const description = (req.body.description || '').trim();
+    const requirementType = req.body.requirement_type || 'Required';
+    const assignedTo = req.body.assigned_to ? Number(req.body.assigned_to) : null;
+    const targetCount = req.body.target_count === undefined ? 1 : Number(req.body.target_count);
+    const recordStatus = req.body.status || 'Active';
 
     if (!recordName) {
       return res.status(400).json({ error: 'Record name is required.' });
+    }
+    if (!['Required', 'Optional'].includes(requirementType)) {
+      return res.status(400).json({ error: 'requirement_type must be Required or Optional.' });
+    }
+    if (!['Active', 'Inactive'].includes(recordStatus)) {
+      return res.status(400).json({ error: 'status must be Active or Inactive.' });
+    }
+    if (!Number.isInteger(targetCount) || targetCount < 1) {
+      return res.status(400).json({ error: 'target_count must be a positive integer.' });
+    }
+    if (assignedTo !== null && (!Number.isInteger(assignedTo) || assignedTo < 1)) {
+      return res.status(400).json({ error: 'assigned_to must be a positive integer.' });
     }
 
     const reqExists = await pool.query(
@@ -193,16 +287,20 @@ router.post('/:id/records', async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO copc_schema.requirement_records (requirement_id, record_name, description)
-       VALUES ($1, $2, $3)
+      `INSERT INTO copc_schema.requirement_records
+         (requirement_id, record_name, description, requirement_type, assigned_to, target_count, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *;`,
-      [requirementId, recordName, description]
+      [requirementId, recordName, description, requirementType, assignedTo, targetCount, recordStatus]
     );
     const created = result.rows[0];
     res.status(201).json({
       ...created,
       id: created.record_id,
       name: created.record_name,
+      requirement_type: created.requirement_type,
+      assigned_to: created.assigned_to,
+      active_status: created.status,
       status: 'Requested',
       assigned: req.body.responsible || '—',
       updated: '—',

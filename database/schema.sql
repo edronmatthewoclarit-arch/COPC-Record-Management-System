@@ -1,14 +1,11 @@
--- Force drop the existing schema and all its tables cleanly
-DROP SCHEMA IF EXISTS copc_schema CASCADE;
-
--- Create a brand new schema
-CREATE SCHEMA copc_schema;
+-- Non-destructive schema creation. Use database/migrations for existing installs.
+CREATE SCHEMA IF NOT EXISTS copc_schema;
 
 -- Set the search path
 SET search_path TO copc_schema, public;
 
 -- 1. Academic programs
-CREATE TABLE copc_schema.programs (
+CREATE TABLE IF NOT EXISTS copc_schema.programs (
     program_id SERIAL PRIMARY KEY,
     program_name VARCHAR(200) NOT NULL UNIQUE,
     degree_code VARCHAR(30),
@@ -16,7 +13,7 @@ CREATE TABLE copc_schema.programs (
 );
 
 -- 2. Users and accounts
-CREATE TABLE copc_schema.users (
+CREATE TABLE IF NOT EXISTS copc_schema.users (
     user_id SERIAL PRIMARY KEY,
     program_id INT NULL,
     name VARCHAR(150) NOT NULL,
@@ -31,6 +28,9 @@ CREATE TABLE copc_schema.users (
     )),
     profile_photo VARCHAR(255),
     profile_photo_path VARCHAR(500),
+    contact_number VARCHAR(50),
+    office_name VARCHAR(200),
+    position VARCHAR(150),
     account_status VARCHAR(20) NOT NULL DEFAULT 'Active' CHECK (account_status IN ('Active', 'Inactive')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -40,35 +40,53 @@ CREATE TABLE copc_schema.users (
 );
 
 -- 3. COPC requirements
-CREATE TABLE copc_schema.requirements (
+CREATE TABLE IF NOT EXISTS copc_schema.requirements (
     requirement_id SERIAL PRIMARY KEY,
     requirement_name VARCHAR(150) NOT NULL UNIQUE,
     description TEXT,
     category VARCHAR(100) NOT NULL,
+    program_id INT NULL,
+    academic_year VARCHAR(20),
+    responsible_role VARCHAR(50),
     is_required BOOLEAN NOT NULL DEFAULT TRUE,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (program_id)
+        REFERENCES copc_schema.programs(program_id)
+        ON DELETE SET NULL
 );
 
 -- 4. Individual requirement records
-CREATE TABLE copc_schema.requirement_records (
+CREATE TABLE IF NOT EXISTS copc_schema.requirement_records (
     record_id SERIAL PRIMARY KEY,
     requirement_id INT NOT NULL,
     record_name VARCHAR(200) NOT NULL,
     description TEXT,
     target_count INT NOT NULL DEFAULT 1,
+    requirement_type VARCHAR(20) NOT NULL DEFAULT 'Required'
+        CHECK (requirement_type IN ('Required', 'Optional')),
+    assigned_to INT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'Active'
+        CHECK (status IN ('Active', 'Inactive')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (requirement_id)
         REFERENCES copc_schema.requirements(requirement_id),
+    FOREIGN KEY (assigned_to)
+        REFERENCES copc_schema.users(user_id)
+        ON DELETE SET NULL,
     UNIQUE (requirement_id, record_name)
 );
 
 -- 5. Uploaded documents
-CREATE TABLE copc_schema.documents (
+CREATE TABLE IF NOT EXISTS copc_schema.documents (
     document_id SERIAL PRIMARY KEY,
     record_id INT NOT NULL,
     uploaded_by INT NOT NULL,
     previous_version_id INT NULL,
+    document_name VARCHAR(255),
+    notes TEXT,
     file_name VARCHAR(255) NOT NULL,
     file_path VARCHAR(500) NOT NULL,
     file_type VARCHAR(50),
@@ -82,6 +100,7 @@ CREATE TABLE copc_schema.documents (
         'Rejected'
     )),
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (record_id)
         REFERENCES copc_schema.requirement_records(record_id),
     FOREIGN KEY (uploaded_by)
@@ -93,7 +112,7 @@ CREATE TABLE copc_schema.documents (
 );
 
 -- 6. Document reviews
-CREATE TABLE copc_schema.document_reviews (
+CREATE TABLE IF NOT EXISTS copc_schema.document_reviews (
     review_id SERIAL PRIMARY KEY,
     document_id INT NOT NULL,
     reviewer_id INT NOT NULL,
@@ -111,21 +130,29 @@ CREATE TABLE copc_schema.document_reviews (
 );
 
 -- 7. Document requests
-CREATE TABLE copc_schema.document_requests (
+CREATE TABLE IF NOT EXISTS copc_schema.document_requests (
     request_id SERIAL PRIMARY KEY,
-    requirement_id INT NOT NULL,
+    requirement_id INT NULL,
     record_id INT NULL,
     requested_by INT NOT NULL,
     assigned_to INT NULL,
     request_message TEXT,
+    document_name VARCHAR(255),
+    attachment_path VARCHAR(500),
+    attachment_name VARCHAR(255),
     due_date DATE,
     status VARCHAR(30) NOT NULL DEFAULT 'Open' CHECK (status IN (
         'Open',
         'Submitted',
         'Completed',
-        'Cancelled'
+        'Cancelled',
+        'Requested',
+        'For Revision',
+        'Resubmitted',
+        'Approved'
     )),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (requirement_id)
         REFERENCES copc_schema.requirements(requirement_id),
     FOREIGN KEY (record_id)
@@ -139,7 +166,7 @@ CREATE TABLE copc_schema.document_requests (
 );
 
 -- 8. Notifications
-CREATE TABLE copc_schema.notifications (
+CREATE TABLE IF NOT EXISTS copc_schema.notifications (
     notification_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL,
     title VARCHAR(150) NOT NULL,
@@ -152,6 +179,7 @@ CREATE TABLE copc_schema.notifications (
         'General'
     )),
     related_document_id INT NULL,
+    related_request_id INT NULL,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id)
@@ -159,11 +187,14 @@ CREATE TABLE copc_schema.notifications (
         ON DELETE CASCADE,
     FOREIGN KEY (related_document_id)
         REFERENCES copc_schema.documents(document_id)
+        ON DELETE SET NULL,
+    FOREIGN KEY (related_request_id)
+        REFERENCES copc_schema.document_requests(request_id)
         ON DELETE SET NULL
 );
 
 -- 9. Dashboard activity logs
-CREATE TABLE copc_schema.activity_logs (
+CREATE TABLE IF NOT EXISTS copc_schema.activity_logs (
     activity_id SERIAL PRIMARY KEY,
     user_id INT NULL,
     action VARCHAR(100) NOT NULL,
@@ -179,7 +210,7 @@ CREATE TABLE copc_schema.activity_logs (
 );
 
 -- 10. Notification preferences
-CREATE TABLE copc_schema.user_notification_preferences (
+CREATE TABLE IF NOT EXISTS copc_schema.user_notification_preferences (
     preference_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     document_requests BOOLEAN NOT NULL DEFAULT TRUE,
@@ -193,7 +224,7 @@ CREATE TABLE copc_schema.user_notification_preferences (
 );
 
 -- 11. User display settings
-CREATE TABLE copc_schema.user_settings (
+CREATE TABLE IF NOT EXISTS copc_schema.user_settings (
     setting_id SERIAL PRIMARY KEY,
     user_id INT NOT NULL UNIQUE,
     theme VARCHAR(20) NOT NULL DEFAULT 'Light' CHECK (theme IN ('Light', 'Dark')),
@@ -203,15 +234,44 @@ CREATE TABLE copc_schema.user_settings (
         ON DELETE CASCADE
 );
 
+-- Additional contact methods for user settings
+CREATE TABLE IF NOT EXISTS copc_schema.user_contacts (
+    contact_id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    contact_type VARCHAR(10) NOT NULL CHECK (contact_type IN ('Email', 'Phone')),
+    contact_value VARCHAR(255) NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id)
+        REFERENCES copc_schema.users(user_id)
+        ON DELETE CASCADE,
+    UNIQUE (user_id, contact_type, contact_value)
+);
+
+-- 12. General document comments, separate from review decisions
+CREATE TABLE IF NOT EXISTS copc_schema.document_comments (
+    comment_id SERIAL PRIMARY KEY,
+    document_id INT NOT NULL,
+    user_id INT NULL,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (document_id)
+        REFERENCES copc_schema.documents(document_id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (user_id)
+        REFERENCES copc_schema.users(user_id)
+        ON DELETE SET NULL
+);
+
 -- Indexes
-CREATE INDEX idx_documents_record
+CREATE INDEX IF NOT EXISTS idx_documents_record
     ON copc_schema.documents(record_id);
 
-CREATE INDEX idx_documents_status_date
+CREATE INDEX IF NOT EXISTS idx_documents_status_date
     ON copc_schema.documents(status, uploaded_at);
 
-CREATE INDEX idx_notifications_user_read
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read
     ON copc_schema.notifications(user_id, is_read);
 
-CREATE INDEX idx_activity_created
+CREATE INDEX IF NOT EXISTS idx_activity_created
     ON copc_schema.activity_logs(created_at);

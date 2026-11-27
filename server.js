@@ -13,6 +13,13 @@ const documentRoutes = require('./src/routes/documentRoutes');
 const requirementRoutes = require('./src/routes/requirementRoutes');
 const representativeRoutes = require('./src/routes/representativeRoutes');
 const copcRoutes = require('./src/routes/copcRoutes');
+const programRoutes = require('./src/routes/programRoutes');
+const requestRoutes = require('./src/routes/requestRoutes');
+const requirementRecordRoutes = require('./src/routes/requirementRecordRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
+const settingsRoutes = require('./src/routes/settingsRoutes');
+const activityLogRoutes = require('./src/routes/activityLogRoutes');
+const reportRoutes = require('./src/routes/reportRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -56,6 +63,14 @@ app.use('/api/users', userRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/records', documentRoutes); // Alias for records pointing to documents endpoint
 app.use('/api/requirements', requirementRoutes);
+app.use('/api/requirement-records', requirementRecordRoutes);
+app.use('/api/programs', programRoutes);
+app.use('/api/document-requests', requestRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/activity', activityLogRoutes);
+app.use('/api/activity-logs', activityLogRoutes);
+app.use('/api/reports', reportRoutes);
 app.use('/api/representatives', representativeRoutes);
 app.use('/api', copcRoutes);
 

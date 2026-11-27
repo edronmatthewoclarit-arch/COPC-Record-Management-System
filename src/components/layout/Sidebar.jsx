@@ -5,35 +5,27 @@ const coordinatorNav = [
   { id: "requirements", label: "Requirements", icon: "checklist" },
   { id: "documents", label: "Documents", icon: "file" },
   { id: "representatives", label: "Representative", icon: "users" },
-  { id: "dean", label: "Dean Sent Files", icon: "academic" },
-  { id: "faculty", label: "Faculty Sent Files", icon: "users" },
-  { id: "officeRepresentative", label: "Office Rep Files", icon: "file" },
 ];
 
 const programHeadNav = [
   { id: "dashboard", label: "Dashboard", icon: "home" },
   { id: "requests", label: "My Requests", icon: "send" },
-  { id: "documents", label: "My Documents", icon: "file" },
-  { id: "dean", label: "Dean Sent Files", icon: "academic" },
-  { id: "faculty", label: "Faculty Sent Files", icon: "users" },
-  { id: "officeRepresentative", label: "Office Rep Files", icon: "file" },
+  { id: "documents", label: "Program Documents", icon: "file" },
+  { id: "facultyRecords", label: "Faculty Records", icon: "users" },
 ];
 
 const deanNav = [
-  { id: "dean", label: "Dean Documents", icon: "file" },
-  { id: "documents", label: "All Documents", icon: "checklist" },
+  { id: "documents", label: "Documents", icon: "file" },
   { id: "dashboard", label: "Dashboard", icon: "home" },
 ];
 
 const facultyNav = [
-  { id: "faculty", label: "Faculty Documents", icon: "file" },
-  { id: "documents", label: "All Documents", icon: "checklist" },
+  { id: "documents", label: "Documents", icon: "file" },
   { id: "dashboard", label: "Dashboard", icon: "home" },
 ];
 
 const officeRepNav = [
-  { id: "officeRepresentative", label: "Office Rep Documents", icon: "file" },
-  { id: "documents", label: "All Documents", icon: "checklist" },
+  { id: "documents", label: "Documents", icon: "file" },
   { id: "dashboard", label: "Dashboard", icon: "home" },
 ];
 
@@ -65,7 +57,8 @@ export function Sidebar({ page, setPage, role }) {
             page === n.id ||
             (n.id === "requirements" &&
               (page === "requirementDetail" || page === "recordDetail")) ||
-            (n.id === "documents" && page === "documentDetail");
+            (n.id === "documents" && page === "documentDetail") ||
+            (n.id === "requests" && page === "requestDetail");
 
           return (
             <button

@@ -26,10 +26,12 @@ import NewRequestModal from "./NewRequestModal";
       }
     };
 
-    const getDocName = (r) => (Array.isArray(r) ? r[0] : r.documentName || r.name);
-    const getUploader = (r) => (Array.isArray(r) ? r[1] : r.uploader);
-    const getRole = (r) => (Array.isArray(r) ? r[2] : r.role || r.position);
+    const getDocName = (r) => (Array.isArray(r) ? r[0] : r.title || r.documentName || r.name);
+    const getRequestedDoc = (r) => (Array.isArray(r) ? r[0] : r.requestedDocument || r.documentName || r.name);
+    const getUploader = (r) => (Array.isArray(r) ? r[1] : r.requestedBy || r.uploader);
+    const getRole = (r) => (Array.isArray(r) ? r[2] : r.role || r.position || "COPC Coordinator");
     const getDate = (r) => (Array.isArray(r) ? r[3] : r.dateRequested || r.date);
+    const getDueDate = (r) => (Array.isArray(r) ? r[7] || "—" : r.dueDate || "—");
     const getStatus = (r) => (Array.isArray(r) ? r[4] : r.status);
     const getActivity = (r) => (Array.isArray(r) ? r[5] : r.lastActivity);
 
@@ -49,8 +51,8 @@ import NewRequestModal from "./NewRequestModal";
     return (
     <>
         <PageHead
-          title="Document Requests"
-          subtitle="Track requests for Bachelor of Science in Information Technology."
+          title="My Requests"
+          subtitle="Document requests assigned to your academic program by the COPC Coordinator."
           action={
             <button
               type="button"
@@ -95,21 +97,24 @@ import NewRequestModal from "./NewRequestModal";
           <table>
             <thead>
               <tr>
-                <th>Requirement / Document</th>
-                <th>Requested from</th>
-                <th>Role</th>
-                <th>Date requested</th>
-                <th>Status</th>
-                <th>Last activity</th>
+                <th>Request Title</th>
+                <th>Requested Document</th>
+                <th>Requesting Office / Person</th>
+                <th>Date Requested</th>
+                <th>Due Date</th>
+                <th>Request Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
                     {filteredRequests.length > 0 ? (
                       filteredRequests.map((r, index) => {
                         const doc = getDocName(r);
+                        const reqDoc = getRequestedDoc(r);
                         const upl = getUploader(r);
                         const rol = getRole(r);
                         const dt = getDate(r);
+                        const due = getDueDate(r);
                         const st = getStatus(r);
                         const act = getActivity(r);
 
@@ -126,20 +131,39 @@ import NewRequestModal from "./NewRequestModal";
                           >
                             <td>
                               <b>{doc}</b>
+                              {act && <small>{act}</small>}
                             </td>
-                            <td>{upl}</td>
-                            <td>{rol}</td>
+                            <td>{reqDoc}</td>
+                            <td>
+                              <b>{upl}</b>
+                              <small>{rol}</small>
+                            </td>
                             <td>{dt}</td>
+                            <td>{due}</td>
                             <td>
                               <Badge status={st} />
                             </td>
-                            <td>{act}</td>
+                            <td>
+                              <button
+                                type="button"
+                                className="btn secondary small"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (onSelectRequest) {
+                                    onSelectRequest(r);
+                                  }
+                                  setPage(st === "Submitted" ? "review" : "requestDetail");
+                                }}
+                              >
+                                View
+                              </button>
+                            </td>
                           </tr>
                         );
                       })
                     ) : (
                       <tr>
-                        <td colSpan={6} className="empty-state">
+                        <td colSpan={7} className="empty-state">
                           No document requests found.
                         </td>
                       </tr>

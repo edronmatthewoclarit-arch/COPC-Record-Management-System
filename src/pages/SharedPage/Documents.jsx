@@ -7,33 +7,72 @@ import UiIcon from "../../components/ui/UiIcon";
 export function Documents({
   documents = initialDocuments,
   openDocument,
+  openSendFile,
   userRole = "Program Head",
+  userProgram = "Information Technology",
 }) {
   const [query, setQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [status, setStatus] = useState("All");
+  const [roleFilter, setRoleFilter] = useState("All");
   const [draftStatus, setDraftStatus] = useState("All");
+  const [draftRole, setDraftRole] = useState("All");
   const [sort, setSort] = useState("Latest Uploaded");
 
-  const allCount = documents.length;
-  const reviewCount = documents.filter((d) =>
+  const isCoordinator = userRole === "COPC Coordinator";
+  const isProgramHead = userRole === "Program Head";
+  const isSubmitterRole =
+    userRole === "Dean" ||
+    userRole === "Faculty" ||
+    userRole === "Office Representative";
+
+  // Scope documents by academic program and user role
+  const scopedDocuments = documents.filter((d) => {
+    const matchesProgram =
+      !d.program ||
+      !userProgram ||
+      d.program.toLowerCase() === userProgram.toLowerCase();
+    if (!matchesProgram) return false;
+
+    if (isCoordinator || isProgramHead) {
+      return true;
+    }
+
+    if (userRole === "Dean") {
+      return !d.role || d.role === "Dean";
+    }
+    if (userRole === "Faculty") {
+      return !d.role || d.role === "Faculty";
+    }
+    if (userRole === "Office Representative") {
+      return !d.role || d.role === "Office Representative";
+    }
+    return true;
+  });
+
+  const allCount = scopedDocuments.length;
+  const reviewCount = scopedDocuments.filter((d) =>
     (d.status || "").toLowerCase().includes("review")
   ).length;
-  const approvedCount = documents.filter(
+  const approvedCount = scopedDocuments.filter(
     (d) => (d.status || "").toLowerCase() === "approved"
   ).length;
-  const revisionCount = documents.filter((d) =>
+  const revisionCount = scopedDocuments.filter((d) =>
     (d.status || "").toLowerCase().includes("revision")
   ).length;
 
-  const docs = documents
-    .map((d, i) => ({ ...d, index: i }))
+  const docs = scopedDocuments
+    .map((d) => ({
+      ...d,
+      index: documents.findIndex((orig) => orig === d || (orig.id && orig.id === d.id)),
+    }))
     .filter(
       (d) =>
-        `${d.name} ${d.requirement || ""} ${d.record || ""} ${d.uploader}`
+        `${d.name} ${d.requirement || ""} ${d.record || ""} ${d.uploader || ""} ${d.role || ""} ${d.program || ""}`
           .toLowerCase()
           .includes(query.toLowerCase()) &&
-        (status === "All" || d.status === status)
+        (status === "All" || d.status === status) &&
+        (roleFilter === "All" || (d.role || "") === roleFilter)
     );
 
   if (sort === "Document Name A–Z") {
@@ -46,20 +85,42 @@ export function Documents({
     docs.reverse();
   }
 
+  const pageTitle = isProgramHead ? "Program Documents" : "Documents";
+  const pageSubtitle = isCoordinator
+    ? "Centralized submissions from Deans, Faculty Members, and Office Representatives."
+    : isProgramHead
+      ? `Centralized documents submitted by Deans, Faculty, and Office Representatives for ${userProgram}.`
+      : "Manage, upload, view, and track your COPC document submissions.";
+
+  const activeFilterCount =
+    (status !== "All" ? 1 : 0) + (roleFilter !== "All" ? 1 : 0);
+
   return (
     <>
       <PageHead
-        title="Documents"
-        subtitle="Manage, review, and track submitted COPC documents."
+        title={pageTitle}
+        subtitle={pageSubtitle}
         action={
-          <button
-            type="button"
-            className="btn secondary icon-button"
-            onClick={() => alert("Exporting all submitted documents...")}
-          >
-            <UiIcon name="download" />
-            Export Document List
-          </button>
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            {isSubmitterRole && openSendFile && (
+              <button
+                type="button"
+                className="btn primary send-files-action-btn"
+                onClick={openSendFile}
+              >
+                <UiIcon name="upload" />
+                <span>Send files</span>
+              </button>
+            )}
+            <button
+              type="button"
+              className="btn secondary icon-button"
+              onClick={() => alert("Exporting all submitted documents...")}
+            >
+              <UiIcon name="download" />
+              Export Document List
+            </button>
+          </div>
         }
       />
 
@@ -96,15 +157,16 @@ export function Documents({
           <div className="filter-wrap">
             <button
               type="button"
-              className={`btn filter-button ${status !== "All" ? "has-filters" : ""}`}
+              className={`btn filter-button ${activeFilterCount > 0 ? "has-filters" : ""}`}
               onClick={() => {
                 setDraftStatus(status);
+                setDraftRole(roleFilter);
                 setFilterOpen(!filterOpen);
               }}
             >
               <UiIcon name="filter" />
               Filter
-              {status !== "All" && <em>1</em>}
+              {activeFilterCount > 0 && <em>{activeFilterCount}</em>}
             </button>
 
             {filterOpen && (
@@ -124,6 +186,7 @@ export function Documents({
                     "For Review",
                     "Approved",
                     "For Revision",
+                    "Revision",
                   ].map((x) => (
                     <label key={x}>
                       <input
@@ -137,11 +200,37 @@ export function Documents({
                   ))}
                 </div>
 
+                {(isCoordinator || isProgramHead) && (
+                  <div className="filter-section">
+                    <span>SUBMITTER ROLE</span>
+                    {[
+                      "All",
+                      "Dean",
+                      "Faculty",
+                      "Office Representative",
+                      "Program Head",
+                    ].map((r) => (
+                      <label key={r}>
+                        <input
+                          type="radio"
+                          name="doc-role"
+                          checked={draftRole === r}
+                          onChange={() => setDraftRole(r)}
+                        />
+                        {r}
+                      </label>
+                    ))}
+                  </div>
+                )}
+
                 <div className="filter-actions">
                   <button
                     type="button"
                     className="btn secondary"
-                    onClick={() => setDraftStatus("All")}
+                    onClick={() => {
+                      setDraftStatus("All");
+                      setDraftRole("All");
+                    }}
                   >
                     Clear Filters
                   </button>
@@ -150,6 +239,7 @@ export function Documents({
                     className="btn primary"
                     onClick={() => {
                       setStatus(draftStatus);
+                      setRoleFilter(draftRole);
                       setFilterOpen(false);
                     }}
                   >
@@ -187,16 +277,19 @@ export function Documents({
           <tbody>
             {docs.map((d) => (
               <tr
-                key={`${d.name}-${d.index}`}
+                key={`${d.id || d.name}-${d.index}`}
                 className="clickable-row document-row"
-                onClick={() => openDocument(d.index, d)}
+                onClick={() => openDocument(d.index !== -1 ? d.index : 0, d)}
               >
                 <td>
                   <div className="document-file">
                     <i>PDF</i>
                     <span>
                       <b>{d.name}</b>
-                      <small>PDF • {d.size || "1.8 MB"}</small>
+                      <small>
+                        PDF • {d.size || "1.8 MB"}
+                        {d.program ? ` • ${d.program}` : ""}
+                      </small>
                     </span>
                   </div>
                 </td>

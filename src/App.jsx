@@ -10,9 +10,7 @@ import { useAuth } from "./context/AuthContext";
 import CoordinatorDashboard from "./pages/CopcCoordinatorPage/CoordinatorDashboard";
 import DocumentDetails from "./pages/SharedPage/DocumentDetails";
 import Documents from "./pages/SharedPage/Documents";
-import DeanPage from "./pages/DeanPage/DeanPage";
-import FacultyPage from "./pages/FacultyPage/FacultyPage";
-import OfficeRepresentativePage from "./pages/OfficeRepresentativePage/OfficeRepresentativePage";
+import FacultyRecords from "./pages/CopcCoordinatorPage/FacultyRecords";
 import SendFileModal from "./pages/SharedPage/SendFileModal";
 import Login from "./pages/AuthPage/Login";
 import LogoutModal from "./pages/AuthPage/LogoutModal";
@@ -42,9 +40,13 @@ export function App() {
   }, [theme]);
 
   const [page, setPage] = useState(() => {
-    if (currentRole === "Dean") return "dean";
-    if (currentRole === "Faculty") return "faculty";
-    if (currentRole === "Office Representative") return "officeRepresentative";
+    if (
+      currentRole === "Dean" ||
+      currentRole === "Faculty" ||
+      currentRole === "Office Representative"
+    ) {
+      return "documents";
+    }
     return "dashboard";
   });
 
@@ -127,11 +129,15 @@ export function App() {
       <Login
         onLogin={(role, email) => {
           login(role, email);
-          if (role === "Dean") setPage("dean");
-          else if (role === "Faculty") setPage("faculty");
-          else if (role === "Office Representative")
-            setPage("officeRepresentative");
-          else setPage("dashboard");
+          if (
+            role === "Dean" ||
+            role === "Faculty" ||
+            role === "Office Representative"
+          ) {
+            setPage("documents");
+          } else {
+            setPage("dashboard");
+          }
         }}
       />
     );
@@ -265,6 +271,11 @@ export function App() {
             <Documents
               documents={documents}
               userRole={currentRole}
+              userProgram={user?.program || "Information Technology"}
+              openSendFile={() => {
+                setSendFileRole(currentRole);
+                setModal("sendFile");
+              }}
               openDocument={(index, docObj) => {
                 setSelectedDocument(index);
                 setSelectedDocObj(docObj);
@@ -273,47 +284,20 @@ export function App() {
             />
           )}
 
-          {page === "dean" && (
-            <DeanPage
-              documents={documents}
-              openDocument={(index, docObj) => {
-                setSelectedDocument(index);
-                setSelectedDocObj(docObj);
-                setPage("documentDetail");
-              }}
-              openSendFile={() => {
-                setSendFileRole("Dean");
-                setModal("sendFile");
-              }}
-            />
-          )}
-
-          {page === "faculty" && (
-            <FacultyPage
-              documents={documents}
-              openDocument={(index, docObj) => {
-                setSelectedDocument(index);
-                setSelectedDocObj(docObj);
-                setPage("documentDetail");
-              }}
-              openSendFile={() => {
-                setSendFileRole("Faculty");
-                setModal("sendFile");
-              }}
-            />
-          )}
-
-          {page === "officeRepresentative" && (
-            <OfficeRepresentativePage
-              documents={documents}
-              openDocument={(index, docObj) => {
-                setSelectedDocument(index);
-                setSelectedDocObj(docObj);
-                setPage("documentDetail");
-              }}
-              openSendFile={() => {
-                setSendFileRole("Office Representative");
-                setModal("sendFile");
+          {page === "facultyRecords" && (
+            <FacultyRecords
+              facultyRecords={facultyRecords}
+              onAddFaculty={(newFac) =>
+                setFacultyRecords((prev) => [...prev, newFac])
+              }
+              onUpdateFaculty={(updatedFac) =>
+                setFacultyRecords((prev) =>
+                  prev.map((f) => (f.id === updatedFac.id ? updatedFac : f))
+                )
+              }
+              onNotify={(msg) => {
+                setToast(msg);
+                setTimeout(() => setToast(""), 3000);
               }}
             />
           )}
@@ -861,6 +845,7 @@ export function App() {
               }),
               version: "v1",
               size: newFileData.size || "1.8 MB",
+              program: user?.program || "Information Technology",
               status: "Revision", // Status strictly only approved and revision
               details:
                 newFileData.notes ||
@@ -870,11 +855,7 @@ export function App() {
             setDocuments((prev) => [newDoc, ...prev]);
             done(
               `File "${newDoc.name}" sent successfully to the COPC Coordinator.`,
-              sendFileRole === "Dean"
-                ? "dean"
-                : sendFileRole === "Faculty"
-                  ? "faculty"
-                  : "officeRepresentative"
+              "documents"
             );
           }}
         />

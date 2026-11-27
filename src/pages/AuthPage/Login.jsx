@@ -52,7 +52,7 @@ export function Login({ onLogin }) {
         <div className="login-brand-bottom">
           <h2 className="login-brand-title">COPC Record Management System</h2>
           <p className="login-brand-desc">
-            Workspace for copc requirements, faculty information, and program progress.
+            Workspace for COPC requirements, faculty information, and program progress.
           </p>
         </div>
       </div>
@@ -64,7 +64,7 @@ export function Login({ onLogin }) {
         </div>
 
         <form onSubmit={submit}>
-          <label htmlFor="login-role">Users <span className="req">*</span></label>
+          <label htmlFor="login-role">Users</label>
           <div className="role-dropdown" ref={dropdownRef}>
             <button
               id="login-role"
@@ -74,7 +74,6 @@ export function Login({ onLogin }) {
               aria-expanded={roleOpen}
               onClick={() => setRoleOpen((prev) => !prev)}
             >
-              <i aria-hidden="true">♙</i>
               <span className={role ? "selected" : "placeholder"}>
                 {role || "Users"}
               </span>
@@ -116,7 +115,6 @@ export function Login({ onLogin }) {
             Username <span className="req">*</span>
           </label>
           <div className="login-field">
-            <i aria-hidden="true">✉</i>
             <input
               id="login-email"
               type="email"
@@ -131,7 +129,6 @@ export function Login({ onLogin }) {
             Password <span className="req">*</span>
           </label>
           <div className="login-field">
-            <i aria-hidden="true">▣</i>
             <input
               id="login-password"
               type={showPassword ? "text" : "password"}

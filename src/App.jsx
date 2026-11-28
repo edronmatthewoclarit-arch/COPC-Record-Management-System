@@ -73,6 +73,9 @@ export function App() {
 
   const [newRep, setNewRep] = useState({
     name: "",
+    firstName: "",
+    middleName: "",
+    lastName: "",
     office: "",
     program: "Information Technology",
     email: "",
@@ -91,9 +94,12 @@ export function App() {
   const [newRecord, setNewRecord] = useState({
     name: "",
     description: "",
-    responsible: "",
+    responsible: "Maria Santos - Program Head",
     type: "Required",
+    status: "Pending",
   });
+  const [requestTargetRecord, setRequestTargetRecord] = useState(null);
+  const [recordOverrides, setRecordOverrides] = useState({});
 
   const [requestRequirement, setRequestRequirement] = useState("");
   const [requestRecipient, setRequestRecipient] = useState(
@@ -152,7 +158,10 @@ export function App() {
     <div className="app">
       <Header
         role={currentRole}
-        onLogout={() => setModal("logout")}
+        onLogout={() => {
+          logout();
+          setPage("dashboard");
+        }}
       />
 
       <Sidebar role={currentRole} page={page} setPage={setPage} />
@@ -167,6 +176,7 @@ export function App() {
                 role={currentRole}
                 setPage={setPage}
                 openNewRequest={() => setModal("programHeadNewRequest")}
+                documents={documents}
               />
             ))}
 
@@ -185,9 +195,14 @@ export function App() {
             <RequirementDetails
               index={selectedRequirement}
               setPage={setPage}
-              openRequest={() => {
+              openRequest={(targetRecord) => {
+                setRequestTargetRecord(targetRecord || null);
                 setRequestRequirement(currentRequirementName);
                 setRequestRequirementLocked(true);
+                if (targetRecord?.assigned && targetRecord.assigned !== "—") {
+                  const roleSuffix = targetRecord.role ? ` — ${targetRecord.role}` : "";
+                  setRequestRecipient(`${targetRecord.assigned}${roleSuffix}`);
+                }
                 setModal("request");
               }}
               openAddRecord={() => setModal("addRecord")}
@@ -197,16 +212,24 @@ export function App() {
               }}
               addedRecords={addedRecords}
               addedRequirements={addedRequirements}
+              recordOverrides={recordOverrides}
             />
           )}
 
           {page === "recordDetail" && (
             <RecordDetails
               setPage={setPage}
-              openRevision={() => setModal("revision")}
-              openApprove={() => setModal("approve")}
               record={selectedRecord}
               parentRequirement={currentRequirementName}
+              onUpdateRecord={(updated) => {
+                if (selectedRecord) {
+                  setSelectedRecord((prev) => ({ ...prev, ...updated }));
+                }
+                setRecordOverrides((prev) => ({
+                  ...prev,
+                  [selectedRecord?.id || selectedRecord?.name]: updated.status,
+                }));
+              }}
             />
           )}
 
@@ -222,6 +245,26 @@ export function App() {
                 setToast(`Added ${newFac.name} to faculty records.`);
                 setTimeout(() => setToast(""), 3000);
               }}
+              onUpdateRequest={(updatedReq) => {
+                const uId = Array.isArray(updatedReq)
+                  ? updatedReq[0]
+                  : updatedReq.id || updatedReq.documentName || updatedReq.name;
+                setRequests((prev) =>
+                  prev.map((r) => {
+                    const rId = Array.isArray(r) ? r[0] : r.id || r.documentName || r.name;
+                    if (rId === uId) {
+                      if (Array.isArray(r)) {
+                        const next = [...r];
+                        next[4] = "Submitted";
+                        return next;
+                      }
+                      return { ...r, status: "Submitted" };
+                    }
+                    return r;
+                  })
+                );
+              }}
+              setToast={setToast}
               onAddRequest={(newReqData) => {
                 const uploaderFac = facultyRecords.find(
                   (f) =>
@@ -272,21 +315,32 @@ export function App() {
                 setPage("documentDetail");
               }}
               onRequest={currentRole === "Program Head" ? (newReqData) => {
-                const newEntry = [
-                  newReqData.documentName,
-                  newReqData.uploader,
-                  newReqData.date,
-                  "Requested",
-                ];
-                newEntry.documentName = newReqData.documentName;
-                newEntry.uploader = newReqData.uploader;
-                newEntry.date = newReqData.date;
-                newEntry.status = "Requested";
+                const docName = newReqData.documentName.replace(/\.pdf$/i, "").trim();
+                const newDoc = {
+                  id: Date.now(),
+                  name: docName,
+                  uploader: newReqData.uploader,
+                  role: "Faculty",
+                  date: newReqData.date || "November 13, 2026",
+                  status: "Requested",
+                  program: user?.program || "Information Technology",
+                };
 
-                setDocuments((prev) => [newEntry, ...prev]);
-                setToast(`Document request for "${newReqData.documentName}" created.`);
+                setDocuments((prev) => [newDoc, ...prev]);
+                setToast(`Document request for "${docName}" created.`);
                 setTimeout(() => setToast(""), 3000);
               } : undefined}
+              onUpdateDocument={(updatedDoc) => {
+                setDocuments((prev) =>
+                  prev.map((d) =>
+                    (updatedDoc.id && d.id === updatedDoc.id) || d.name === updatedDoc.name
+                      ? { ...d, ...updatedDoc }
+                      : d
+                  )
+                );
+                setToast(`Document "${updatedDoc.name.replace(/\.pdf$/i, "")}" submitted successfully.`);
+                setTimeout(() => setToast(""), 3000);
+              }}
             />
           )}
 
@@ -322,13 +376,22 @@ export function App() {
               documents={documents}
               userRole={currentRole}
               setPage={setPage}
-              openRevision={(doc) => {
-                if (doc) setSelectedDocObj(doc);
-                setModal("revision");
-              }}
-              openApprove={(doc) => {
-                if (doc) setSelectedDocObj(doc);
-                setModal("approve");
+              source={
+                currentRole === "Program Head" || currentRole === "Dean"
+                  ? "programDocuments"
+                  : "documents"
+              }
+              onUpdateDocumentStatus={(updatedDoc) => {
+                setDocuments((prevDocs) =>
+                  prevDocs.map((d) =>
+                    d.name === updatedDoc.name || d.id === updatedDoc.id
+                      ? { ...d, ...updatedDoc }
+                      : d
+                  )
+                );
+                if (selectedDocObj) {
+                  setSelectedDocObj((prev) => ({ ...prev, ...updatedDoc }));
+                }
               }}
             />
           )}
@@ -374,7 +437,27 @@ export function App() {
         <Modal
           title="Send Document Request"
           onClose={() => setModal(null)}
-          action={() => setModal("requestConfirm")}
+          action={() => {
+            if (requestTargetRecord) {
+              setRecordOverrides((prev) => ({
+                ...prev,
+                [requestTargetRecord.name]: {
+                  status: "Requested",
+                  updated: "Just now",
+                },
+              }));
+              setAddedRecords((prev) =>
+                prev.map((rec) =>
+                  rec.name === requestTargetRecord.name
+                    ? { ...rec, status: "Requested", updated: "Just now" }
+                    : rec
+                )
+              );
+            }
+            done(
+              `Document request sent successfully — ${requestTargetRecord?.name || requestRequirement} was requested from ${requestRecipient.split(" — ")[0]}.`
+            );
+          }}
           actionLabel="Send Request"
         >
           <div className="modal-summary request-form">
@@ -497,39 +580,29 @@ export function App() {
         </Modal>
       )}
 
-      {modal === "requestConfirm" && (
-        <Modal
-          title="Send Document Request?"
-          onClose={() => setModal("request")}
-          action={() =>
-            done(
-              `Document request sent successfully — ${requestRequirement} was requested from ${requestRecipient.split(" — ")[0]}.`,
-              "requests"
-            )
-          }
-          actionLabel="Confirm & Send"
-        >
-          <p>
-            You are about to request <b>“{requestRequirement}”</b> from{" "}
-            <b>{requestRecipient.replace(" — ", " (")})</b>.
-          </p>
-          <p className="confirmation-note">
-            The recipient will receive a notification and the request will be
-            recorded in the system.
-          </p>
-        </Modal>
-      )}
-
       {modal === "addRequirement" && (
         <Modal
-          title="Add COPC Requirement"
+          title="COPC Requirement"
+          className="add-requirement-modal"
           onClose={() => setModal(null)}
-          action={() => setModal("addRequirementConfirm")}
-          actionLabel="Continue"
+          action={() => {
+            if (newReq.name.trim()) {
+              setAddedRequirements((x) => [...x, newReq]);
+              done(`${newReq.name} was created successfully.`, "requirements");
+              setNewReq({
+                name: "",
+                category: "Faculty",
+                description: "",
+                responsible: "Program Head",
+                year: "2026–2027",
+              });
+            } else {
+              setModal(null);
+            }
+          }}
+          actionLabel="Save"
+          showClose={false}
         >
-          <p className="modal-subtitle">
-            Create a new requirement for the program.
-          </p>
           <div className="form-grid modal-form">
             <label>
               Requirement Name *
@@ -560,141 +633,86 @@ export function App() {
                 }
               />
             </label>
-            <label>
-              Responsible Personnel / Office
-              <select
-                value={newReq.responsible}
-                onChange={(e) =>
-                  setNewReq({ ...newReq, responsible: e.target.value })
-                }
-              >
-                <option>Program Head</option>
-                <option>Faculty</option>
-                <option>Office Representative</option>
-                <option>Dean</option>
-              </select>
-            </label>
-            <label>
-              Academic Year *
-              <select
-                value={newReq.year}
-                onChange={(e) => setNewReq({ ...newReq, year: e.target.value })}
-              >
-                <option>2026–2027</option>
-                <option>2025–2026</option>
-              </select>
-            </label>
           </div>
-        </Modal>
-      )}
-
-      {modal === "addRequirementConfirm" && (
-        <Modal
-          title="Create Requirement?"
-          onClose={() => setModal("addRequirement")}
-          action={() => {
-            if (newReq.name) {
-              setAddedRequirements((x) => [...x, newReq]);
-              done(`${newReq.name} was created successfully.`, "requirements");
-            }
-          }}
-          actionLabel="Create Requirement"
-        >
-          <p>
-            You are about to add{" "}
-            <b>“{newReq.name || "this requirement"}”</b> as a new COPC
-            requirement for Bachelor of Science in Information Technology.
-          </p>
         </Modal>
       )}
 
       {modal === "addRecord" && (
         <Modal
-          title="Add Required Record"
+          title="Required Record"
+          className="required-record-modal"
           onClose={() => setModal(null)}
-          action={() => setModal("addRecordConfirm")}
-          actionLabel="Continue"
+          showClose={false}
+          action={() => {
+            if (newRecord.name.trim()) {
+              setAddedRecords((x) => [
+                ...x,
+                {
+                  ...newRecord,
+                  name: newRecord.name.trim(),
+                  responsible:
+                    newRecord.responsible || "Maria Santos - Program Head",
+                  status: "Pending",
+                  type: "Required",
+                },
+              ]);
+              done(
+                `${newRecord.name.trim()} was added successfully.`,
+                "requirementDetail"
+              );
+              setNewRecord({
+                name: "",
+                description: "",
+                responsible: "Maria Santos - Program Head",
+                type: "Required",
+                status: "Pending",
+              });
+            } else {
+              setModal(null);
+            }
+          }}
+          actionLabel="Save"
         >
-          <div className="form-grid modal-form">
-            <label className="full">
-              Parent Requirement
-              <input value={currentRequirementName} readOnly />
-            </label>
-            <label>
-              Required Record Name *
+          <div className="required-record-form">
+            <div className="record-form-group">
+              <label>Required Record Name</label>
               <input
+                className="record-form-input"
                 value={newRecord.name}
                 onChange={(e) =>
                   setNewRecord({ ...newRecord, name: e.target.value })
                 }
+                autoFocus
               />
-            </label>
-            <label>
-              Requirement Type
-              <select
-                value={newRecord.type}
-                onChange={(e) =>
-                  setNewRecord({ ...newRecord, type: e.target.value })
-                }
-              >
-                <option>Required</option>
-                <option>Optional</option>
-              </select>
-            </label>
-            <label className="full">
-              Description *
-              <textarea
-                value={newRecord.description}
-                onChange={(e) =>
-                  setNewRecord({ ...newRecord, description: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Responsible Personnel / Office
-              <select
-                value={newRecord.responsible}
-                onChange={(e) =>
-                  setNewRecord({ ...newRecord, responsible: e.target.value })
-                }
-              >
-                <option value="">Unassigned</option>
-                <option>Maria Santos — Program Head</option>
-                <option>Ana Reyes — Faculty</option>
-                <option>Rizal Lim — Office Representative</option>
-              </select>
-            </label>
-            <label>
-              Status
-              <select>
-                <option>Active</option>
-                <option>Inactive</option>
-              </select>
-            </label>
+            </div>
+            <div className="record-form-group">
+              <label>Responsible Personnel</label>
+              <div className="record-select-wrapper">
+                <select
+                  className="record-form-select"
+                  value={
+                    newRecord.responsible || "Maria Santos - Program Head"
+                  }
+                  onChange={(e) =>
+                    setNewRecord({ ...newRecord, responsible: e.target.value })
+                  }
+                >
+                  <option value="Maria Santos - Program Head">
+                    Maria Santos - Program Head
+                  </option>
+                  <option value="Ana Reyes - Faculty">
+                    Ana Reyes - Faculty
+                  </option>
+                  <option value="Rizal Lim - Office Representative">
+                    Rizal Lim - Office Representative
+                  </option>
+                </select>
+                <span className="record-select-arrow" aria-hidden="true">
+                  <UiIcon name="chevron-down" />
+                </span>
+              </div>
+            </div>
           </div>
-        </Modal>
-      )}
-
-      {modal === "addRecordConfirm" && (
-        <Modal
-          title="Add Required Record?"
-          onClose={() => setModal("addRecord")}
-          action={() => {
-            if (newRecord.name) {
-              setAddedRecords((x) => [...x, newRecord]);
-              done(
-                `${newRecord.name} was added successfully.`,
-                "requirementDetail"
-              );
-            }
-          }}
-          actionLabel="Add Required Record"
-        >
-          <p>
-            You are about to add{" "}
-            <b>“{newRecord.name || "this record"}”</b> under Faculty
-            Information.
-          </p>
         </Modal>
       )}
 
@@ -865,26 +883,43 @@ export function App() {
         />
       )}
 
-      {modal === "logout" && (
-        <LogoutModal
-          onClose={() => setModal(null)}
-          onConfirm={() => {
-            setModal(null);
-            logout();
-            setPage("dashboard");
-          }}
-        />
-      )}
-
       {modal === "addRepresentative" && (
         <Modal
           title="Add Representative"
+          showClose={false}
           onClose={() => setModal(null)}
           action={() => {
-            if (newRep.name) {
-              setAddedRepresentatives((x) => [...x, newRep]);
+            const f = newRep.firstName?.trim() || "";
+            const m = newRep.middleName?.trim() || "";
+            const l = newRep.lastName?.trim() || "";
+            let finalName = "";
+            if (f && l) {
+              if (m) {
+                const initial = m.replace(/\.+$/, "")[0]?.toUpperCase();
+                finalName = `${f} ${initial ? `${initial}. ` : ""}${l}`;
+              } else {
+                finalName = `${f} ${l}`;
+              }
+            } else {
+              finalName = newRep.name?.trim() || [f, m, l].filter(Boolean).join(" ");
+            }
+
+            if (finalName) {
+              setAddedRepresentatives((x) => [
+                ...x,
+                {
+                  ...newRep,
+                  name: finalName,
+                  firstName: f,
+                  middleName: m,
+                  lastName: l,
+                },
+              ]);
               setNewRep({
                 name: "",
+                firstName: "",
+                middleName: "",
+                lastName: "",
                 office: "",
                 program: "Information Technology",
                 email: "",
@@ -897,13 +932,38 @@ export function App() {
           actionLabel="Add Representative"
         >
           <div className="form-grid modal-form">
-            <label>
-              Representative Name *
-              <input
-                value={newRep.name}
-                onChange={(e) => setNewRep({ ...newRep, name: e.target.value })}
-              />
-            </label>
+            <div className="rep-name-row full">
+              <label>
+                First Name *
+                <input
+                  value={newRep.firstName}
+                  onChange={(e) =>
+                    setNewRep({ ...newRep, firstName: e.target.value })
+                  }
+                  placeholder="e.g. Juan"
+                />
+              </label>
+              <label>
+                Middle Name
+                <input
+                  value={newRep.middleName}
+                  onChange={(e) =>
+                    setNewRep({ ...newRep, middleName: e.target.value })
+                  }
+                  placeholder="e.g. Cruz"
+                />
+              </label>
+              <label>
+                Last Name *
+                <input
+                  value={newRep.lastName}
+                  onChange={(e) =>
+                    setNewRep({ ...newRep, lastName: e.target.value })
+                  }
+                  placeholder="e.g. Dela Cruz"
+                />
+              </label>
+            </div>
             <label>
               Office Name *
               <input

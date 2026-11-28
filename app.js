@@ -75,6 +75,10 @@ function UiIcon({ name }) {
         download: React.createElement(React.Fragment, null,
             React.createElement("path", { d: "M12 3v12m0 0 4-4m-4 4-4-4" }),
             React.createElement("path", { d: "M4 17v3h16v-3" })),
+        "check-simple": React.createElement("path", { d: "m4 12 5 5L20 6" }),
+        edit: React.createElement(React.Fragment, null,
+            React.createElement("path", { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }),
+            React.createElement("path", { d: "M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" })),
     };
     return React.createElement("svg", { className: "ui-icon", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round" }, paths[name] || paths.file);
 }
@@ -85,7 +89,7 @@ function Seal({ dark = false }) {
 function Badge({ status }) {
     return React.createElement("span", { className: `badge ${status.toLowerCase().replace(" ", "-")}` }, status);
 }
-function Modal({ title, children, onClose, action, actionLabel }) {
+function Modal({ title, children, onClose, action, actionLabel, showClose = true }) {
     const isLogout = title === "Log Out?";
     const isRequest = title === "Send Document Request";
     return React.createElement("div", { className: "modal-backdrop", onMouseDown: onClose },
@@ -105,7 +109,7 @@ function Modal({ title, children, onClose, action, actionLabel }) {
                         React.createElement("small", null, "Request the appropriate personnel to submit this requirement."))) : React.createElement("div", null,
                     React.createElement("span", { className: "eyebrow" }, "Confirmation required"),
                     React.createElement("h2", null, title)),
-                React.createElement("button", { className: "icon-btn", onClick: onClose }, "\u00D7")),
+                showClose && React.createElement("button", { className: "icon-btn", onClick: onClose }, "\u00D7")),
             React.createElement("div", { className: "modal-body" }, children),
             React.createElement("div", { className: "modal-actions" },
                 React.createElement("button", { className: "btn secondary", onClick: onClose }, "Cancel"),
@@ -166,10 +170,7 @@ function Header({ notify, onNotify, onLogout, role, onSettings, notices, markAll
     const user = names[role] || names["COPC Coordinator"];
     return React.createElement("header", null,
         React.createElement("div", { className: "university-brand" },
-            React.createElement(Seal, { dark: true }),
-            React.createElement("div", null,
-                React.createElement("b", null, "MINDANAO STATE UNIVERSITY"),
-                React.createElement("span", null, "AT NAAWAN"))),
+            React.createElement(Seal, { dark: true })),
         React.createElement("div", { className: "header-title" },
             React.createElement("div", null,
                 React.createElement("b", null, "COPC RECORD MANAGEMENT SYSTEM"),
@@ -321,6 +322,53 @@ function Dashboard({ setPage, openRequest }) {
                     React.createElement("time", null, item.time))))));
 }
 function UserDashboard({ role, setPage }) {
+    const isProgramHead = role === "Program Head";
+    if (isProgramHead) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(PageHead, { title: "Welcome, Program Head!" }),
+            React.createElement("section", { className: "card ph-dashboard-metrics" },
+                React.createElement("div", { className: "ph-metric-item" },
+                    React.createElement("span", { className: "ph-metric-icon ph-icon-purple" },
+                        React.createElement(UiIcon, { name: "file" })),
+                    React.createElement("div", { className: "ph-metric-info" },
+                        React.createElement("span", { className: "ph-metric-number" }, "14"),
+                        React.createElement("span", { className: "ph-metric-label" }, "Total Documents"))),
+                React.createElement("div", { className: "ph-metric-item" },
+                    React.createElement("span", { className: "ph-metric-icon ph-icon-green" },
+                        React.createElement(UiIcon, { name: "check-simple" })),
+                    React.createElement("div", { className: "ph-metric-info" },
+                        React.createElement("span", { className: "ph-metric-number" }, "7"),
+                        React.createElement("span", { className: "ph-metric-label" }, "Approved"))),
+                React.createElement("div", { className: "ph-metric-item" },
+                    React.createElement("span", { className: "ph-metric-icon ph-icon-amber" },
+                        React.createElement(UiIcon, { name: "clock" })),
+                    React.createElement("div", { className: "ph-metric-info" },
+                        React.createElement("span", { className: "ph-metric-number" }, "2"),
+                        React.createElement("span", { className: "ph-metric-label" }, "Pending Request"))),
+                React.createElement("div", { className: "ph-metric-item" },
+                    React.createElement("span", { className: "ph-metric-icon ph-icon-red" },
+                        React.createElement(UiIcon, { name: "edit" })),
+                    React.createElement("div", { className: "ph-metric-info" },
+                        React.createElement("span", { className: "ph-metric-number" }, "2"),
+                        React.createElement("span", { className: "ph-metric-label" }, "For Revision")))),
+            React.createElement("div", { className: "dashboard-grid bottom" },
+                React.createElement("section", { className: "card" },
+                    React.createElement("div", { className: "section-head" },
+                        React.createElement("div", null,
+                            React.createElement("h2", null,
+                                React.createElement(UiIcon, { name: "clock" }),
+                                "Recent Activities")),
+                        React.createElement("button", { className: "link", onClick: () => setPage("requests") }, "View All")),
+                    React.createElement("p", { className: "empty-state" }, "No recent activities yet.")),
+                React.createElement("section", { className: "card" },
+                    React.createElement("div", { className: "section-head" },
+                        React.createElement("div", null,
+                            React.createElement("h2", null,
+                                React.createElement(UiIcon, { name: "file" }),
+                                "Document Updates")),
+                        React.createElement("button", { className: "link", onClick: () => setPage("documents") }, "View All")),
+                    React.createElement("p", { className: "empty-state" }, "No document updates yet."))));
+    }
     const users = { "Program Head": "Maria Santos", "Dean": "Ramon Castillo", "Faculty": "Ana Reyes", "Office Representative": "Rizal Lim" };
     const name = users[role] || "Maria Santos";
     return React.createElement(React.Fragment, null,
@@ -398,7 +446,7 @@ function Requirements({ openRequirement, openAdd, addedRequirements }) {
     const descriptions = ["Faculty qualifications, assignments, and supporting records.", "Faculty teaching assignments and loads per semester.", "Course syllabi required for the BS Information Technology program.", "Curriculum and program documentation.", "Laboratory facilities, equipment, and supporting records.", "Library holdings, subscriptions, and learning resources.", "Program facilities and supporting infrastructure.", "Research and extension outputs and activities.", "Student academic and enrollment records.", "Additional documentary requirements prescribed for COPC."];
     const recordCounts = requirements.map(r => (sampleRecords[r.name] || []).length), progress = requirements.map(r => { const rows = sampleRecords[r.name] || []; return rows.length ? Math.round(rows.filter(x => x.status === "Approved").length / rows.length * 100) : 0; });
     return React.createElement(React.Fragment, null,
-        React.createElement(PageHead, { title: "Program Requirements", subtitle: "Bachelor of Science in Information Technology" }),
+        React.createElement(PageHead, { title: "Program Requirements" }),
         React.createElement("section", { className: "card requirement-summary" },
             React.createElement("div", { className: "mini-ring" },
                 React.createElement("div", null,
@@ -528,54 +576,56 @@ const genericRecordFiles = {
     "Other CHED Requirements": ["Program_Accreditation_Documents.pdf", "Institutional_Policies.pdf", "Quality_Assurance_Report.pdf", "Supporting_Documents.pdf"],
 };
 Object.entries(genericRecordFiles).forEach(([key, files]) => { sampleRecords[key] = files.map((file, i) => ({ name: file.replace(/\.(pdf|xlsx)$/i, "").replaceAll("_", " "), file, size: i % 2 ? "980 KB" : "1.7 MB", assigned: i % 2 ? "Maria Santos" : "Rizal Lim", role: i % 2 ? "Program Head" : "Office Representative", status: "Approved", updated: `Oct ${18 - i}, 2026 • 10:30 AM`, version: "v1" })); });
-function RequirementDetails({ index, setPage, openRequest, openAddRecord, openRecord, addedRecords }) {
+function RequirementDetails({ index, setPage, openRequest, openAddRecord, openRecord, addedRecords, recordOverrides = {} }) {
     const requirement = requirements[index] || requirements[0];
     const [query, setQuery] = React.useState(""), [recordFilterOpen, setRecordFilterOpen] = React.useState(false), [recordStatus, setRecordStatus] = React.useState("All"), [draftRecordStatus, setDraftRecordStatus] = React.useState("All");
     const baseRecords = sampleRecords[requirement.name] || [];
-    const allRecords = [...baseRecords, ...addedRecords.map(r => ({ name: r.name, file: null, size: "", assigned: r.responsible || "—", role: "", status: "Requested", updated: "—", version: "—" }))];
-    const records = allRecords.filter(r => r.name.toLowerCase().includes(query.toLowerCase()) && (recordStatus === "All" || r.status === recordStatus));
-    const approved = allRecords.filter(r => r.status === "Approved").length, pending = allRecords.filter(r => r.status === "Pending" || r.status === "For Review").length, revision = allRecords.filter(r => r.status === "For Revision").length, requested = allRecords.filter(r => r.status === "Requested").length;
+    const allRecords = [...baseRecords, ...addedRecords.map(r => ({ name: r.name, file: null, size: "", assigned: r.responsible || "—", role: "", status: r.status || "Pending", updated: "—", version: "—" }))].map(rec => recordOverrides && recordOverrides[rec.name] ? { ...rec, ...recordOverrides[rec.name] } : rec);
+    const records = allRecords.filter(r => {
+        const matchesQuery = r.name.toLowerCase().includes(query.toLowerCase());
+        if (!matchesQuery) return false;
+        if (recordStatus === "All") return true;
+        const isSubmitted = Boolean(r.file || r.status === "Submitted" || r.status === "Approved" || r.status === "For Review" || r.status === "For Revision");
+        if (recordStatus === "Submitted") return isSubmitted;
+        if (recordStatus === "Not Submitted") return !isSubmitted;
+        return r.status === recordStatus;
+    });
+    const approved = allRecords.filter(r => r.status === "Approved").length, pending = allRecords.filter(r => r.status === "Pending" || r.status === "For Review").length, revision = allRecords.filter(r => r.status === "For Revision").length, notSubmitted = allRecords.filter(r => !r.file && (r.status === "Not Submitted" || r.status === "Requested" || !r.status)).length;
     return React.createElement(React.Fragment, null,
         React.createElement("button", { className: "back", onClick: () => setPage("requirements") }, "\u2190 Back to Program Requirements"),
         React.createElement(PageHead, { title: requirement.name, subtitle: "Faculty qualifications, assignments, and supporting documentation required for COPC compliance." }),
-        React.createElement("div", { className: "record-summary" }, [[String(records.length), "Total Records", "navy"], [String(approved), "Approved", "green"], [String(pending), "Pending", "amber"], [String(revision), "For Revision", "red"], [String(requested), "Requested", "blue"]].map(x => React.createElement("div", { key: x[1] },
+        React.createElement("div", { className: "record-summary" }, [[String(records.length), "Total Records", "navy"], [String(approved), "Approved", "green"], [String(pending), "Pending", "amber"], [String(revision), "For Revision", "red"], [String(notSubmitted), "Not Submitted", "blue"]].map(x => React.createElement("div", { key: x[1] },
             React.createElement("strong", null, x[0]),
             React.createElement("span", null, x[1])))),
         React.createElement("section", { className: "card table-card required-records" },
-            React.createElement("div", { className: "requirements-table-toolbar" },
-                React.createElement("div", { className: "requirements-toolbar-title" },
-                    React.createElement("b", null, "Required Records"),
-                    React.createElement("span", null,
-                        "Showing ",
-                        records.length,
-                        " of ",
-                        allRecords.length,
-                        " records")),
-                React.createElement("div", { className: "requirements-actions" },
-                    React.createElement("div", { className: "search" },
-                        React.createElement(UiIcon, { name: "search" }),
-                        React.createElement("input", { value: query, onChange: e => setQuery(e.target.value) })),
-                    React.createElement("div", { className: "filter-wrap" },
-                        React.createElement("button", { className: `btn filter-button ${recordStatus !== "All" ? "has-filters" : ""}`, onClick: () => { setDraftRecordStatus(recordStatus); setRecordFilterOpen(!recordFilterOpen); } },
-                            React.createElement(UiIcon, { name: "filter" }),
-                            "Filter",
-                            recordStatus !== "All" && React.createElement("em", null, "1")),
-                        recordFilterOpen && React.createElement("div", { className: "filter-popover record-filter-popover" },
-                            React.createElement("div", { className: "filter-popover-head" },
-                                React.createElement("b", null, "Filter Required Records"),
-                                React.createElement("button", { onClick: () => setRecordFilterOpen(false) }, "\u00D7")),
-                            React.createElement("div", { className: "record-status-options" },
-                                React.createElement("span", null, "STATUS"),
-                                ["All", "Approved", "For Review", "Submitted", "Pending", "For Revision", "Requested"].map(x => React.createElement("label", { key: x },
-                                    React.createElement("input", { type: "radio", name: "record-status", checked: draftRecordStatus === x, onChange: () => setDraftRecordStatus(x) }),
-                                    x))),
-                            React.createElement("div", { className: "filter-actions" },
-                                React.createElement("button", { className: "btn secondary", onClick: () => setDraftRecordStatus("All") }, "Clear Filters"),
-                                React.createElement("button", { className: "btn primary", onClick: () => { setRecordStatus(draftRecordStatus); setRecordFilterOpen(false); } }, "Apply Filters")))),
-                    React.createElement("button", { className: "btn secondary", onClick: openAddRecord }, "\uFF0B Add Required Record"),
-                    React.createElement("button", { className: "btn primary", onClick: openRequest },
-                        React.createElement(UiIcon, { name: "send" }),
-                        "Send Request"))),
+            React.createElement("div", { className: "required-records-card-head" },
+                React.createElement("b", null, "Required Records")),
+            React.createElement("div", { className: "representative-toolbar" },
+                React.createElement("div", { className: "search representative-search", style: { maxWidth: "360px" } },
+                    React.createElement(UiIcon, { name: "search" }),
+                    React.createElement("input", { value: query, onChange: e => setQuery(e.target.value), placeholder: "Search Records" })),
+                    React.createElement("div", { className: "required-records-actions" },
+                        React.createElement("div", { className: "filter-wrap" },
+                            React.createElement("button", { className: `btn filter-button ${recordStatus !== "All" ? "has-filters" : ""}`, onClick: () => { setDraftRecordStatus(recordStatus); setRecordFilterOpen(!recordFilterOpen); } },
+                                "Filter",
+                                recordStatus !== "All" && React.createElement("em", null, recordStatus)),
+                            recordFilterOpen && React.createElement("div", { className: "filter-popover record-filter-popover" },
+                                React.createElement("div", { className: "filter-popover-head" },
+                                    React.createElement("b", null, "Filter Required Records"),
+                                    React.createElement("button", { onClick: () => setRecordFilterOpen(false) }, "\u00D7")),
+                                React.createElement("div", { className: "record-status-options" },
+                                    React.createElement("span", { className: "filter-group-heading" }, "REVIEW STATUS"),
+                                    ["All", "Approved", "For Review", "For Revision", "Pending", "Requested"].map(x => React.createElement("label", { key: x },
+                                        React.createElement("input", { type: "radio", name: "record-status", checked: draftRecordStatus === x, onChange: () => setDraftRecordStatus(x) }),
+                                        x)),
+                                    React.createElement("span", { className: "filter-group-heading", style: { marginTop: "10px" } }, "SUBMISSION"),
+                                    ["Submitted", "Not Submitted"].map(x => React.createElement("label", { key: x },
+                                        React.createElement("input", { type: "radio", name: "record-status", checked: draftRecordStatus === x, onChange: () => setDraftRecordStatus(x) }),
+                                        x))),
+                                React.createElement("div", { className: "filter-actions" },
+                                    React.createElement("button", { className: "btn secondary", onClick: () => setDraftRecordStatus("All") }, "Clear Filters"),
+                                    React.createElement("button", { className: "btn primary", onClick: () => { setRecordStatus(draftRecordStatus); setRecordFilterOpen(false); } }, "Apply Filters")))),
+                        React.createElement("button", { className: "btn primary send-request-main", style: { minWidth: "175px" }, onClick: openAddRecord }, "Add Required Record"))),
             recordStatus !== "All" && React.createElement("div", { className: "active-filters" },
                 React.createElement("span", null, "Active filter:"),
                 React.createElement("button", { onClick: () => { setRecordStatus("All"); setDraftRecordStatus("All"); } },
@@ -587,21 +637,29 @@ function RequirementDetails({ index, setPage, openRequest, openAddRecord, openRe
                     React.createElement("tr", null,
                         React.createElement("th", null, "#"),
                         React.createElement("th", null, "Required Record"),
-                        React.createElement("th", null, "Assigned To"),
+                        React.createElement("th", null, "Assigned to"),
                         React.createElement("th", null, "Status"),
-                        React.createElement("th", null, "Last Updated"))),
+                        React.createElement("th", null, "Submission"),
+                        React.createElement("th", null, "Last updated"))),
                 React.createElement("tbody", null,
-                    records.map((r, i) => React.createElement("tr", { className: "clickable-row", key: r.name, onClick: () => r.file ? openRecord(r) : openRequest() },
+                    records.map((r, i) => React.createElement("tr", { className: "clickable-row", key: r.name, onClick: () => r.file ? openRecord(r) : openRequest(r) },
                         React.createElement("td", null, i + 1),
                         React.createElement("td", null,
-                            React.createElement("b", null, r.name),
-                            React.createElement("small", null, r.file || "No document submitted")),
-                        React.createElement("td", null, r.assigned === "—" ? "—" : `${r.assigned} — ${r.role}`),
+                            React.createElement("b", null, r.name)),
+                        React.createElement("td", null, r.assigned && r.assigned !== "—" ? (r.role ? `${r.assigned} — ${r.role}` : r.assigned) : "—"),
                         React.createElement("td", null,
-                            React.createElement(Badge, { status: r.status })),
-                        React.createElement("td", null, r.updated))),
+                            r.status && r.status !== "Not Submitted" && r.status !== "Submitted"
+                                ? React.createElement(Badge, { status: r.status })
+                                : React.createElement("span", { className: "record-status-empty" }, "—")),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "record-submission-col" },
+                                React.createElement(Badge, { status: (r.file || r.status === "Approved" || r.status === "For Review" || r.status === "For Revision" || r.status === "Submitted") ? "Submitted" : "Not Submitted" }),
+                                r.file && React.createElement("span", { className: "record-submission-file", title: r.file },
+                                    React.createElement(UiIcon, { name: "file" }),
+                                    React.createElement("span", null, r.file)))),
+                        React.createElement("td", null, r.updated || "—"))),
                     records.length === 0 && React.createElement("tr", null,
-                        React.createElement("td", { colSpan: 5 },
+                        React.createElement("td", { colSpan: 6 },
                             React.createElement("div", { className: "requirements-empty" },
                                 React.createElement(UiIcon, { name: "filter" }),
                                 React.createElement("b", null, "No required records match your filters."),
@@ -685,65 +743,48 @@ function Documents({ openDocument }) {
     if (sort === "Oldest Uploaded")
         docs.reverse();
     return React.createElement(React.Fragment, null,
-        React.createElement(PageHead, { title: "Documents", subtitle: "Manage, review, and track submitted COPC documents.", action: React.createElement("button", { className: "btn secondary icon-button" },
-                React.createElement(UiIcon, { name: "download" }),
-                "Export Document List") }),
-        React.createElement("section", { className: "card document-summary" }, [["24", "All Documents", "file", "navy"], ["3", "For Review", "clock", "amber"], ["18", "Approved", "check", "green"], ["2", "For Revision", "revision", "red"]].map(x => React.createElement("div", { key: x[1] },
-            React.createElement("i", { className: x[3] },
-                React.createElement(UiIcon, { name: x[2] })),
-            React.createElement("span", null,
-                React.createElement("strong", null, x[0]),
-                React.createElement("small", null, x[1]))))),
+        React.createElement(PageHead, { title: "Documents" }),
+        React.createElement("section", { className: "card document-summary-card" }, [
+            { count: 24, label: "All Documents", color: "#4f46e5" },
+            { count: 3, label: "For Review", color: "#a16207" },
+            { count: 18, label: "Approved", color: "#15803d" },
+            { count: 1, label: "Pending", color: "#a16207" },
+            { count: 5, label: "For Revision", color: "#b91c1c" }
+        ].map(m => React.createElement("div", { className: "doc-metric-item", key: m.label },
+            React.createElement("span", { className: "doc-metric-swatch", style: { backgroundColor: m.color } }),
+            React.createElement("div", { className: "doc-metric-data" },
+                React.createElement("strong", { className: "doc-metric-count" }, m.count),
+                React.createElement("span", { className: "doc-metric-label" }, m.label))))),
         React.createElement("section", { className: "card table-card documents-workspace" },
             React.createElement("div", { className: "document-toolbar" },
-                React.createElement("div", { className: "search" },
+                React.createElement("div", { className: "doc-search-wrapper" },
                     React.createElement(UiIcon, { name: "search" }),
-                    React.createElement("input", { value: query, onChange: e => setQuery(e.target.value), placeholder: "Search document name, requirement, or uploader..." })),
-                React.createElement("div", { className: "filter-wrap" },
-                    React.createElement("button", { className: `btn filter-button ${status !== "All" ? "has-filters" : ""}`, onClick: () => { setDraftStatus(status); setFilterOpen(!filterOpen); } },
-                        React.createElement(UiIcon, { name: "filter" }),
-                        "Filter",
-                        status !== "All" && React.createElement("em", null, "1")),
-                    filterOpen && React.createElement("div", { className: "filter-popover document-filter" },
-                        React.createElement("div", { className: "filter-popover-head" },
-                            React.createElement("b", null, "Filter Documents"),
-                            React.createElement("button", { onClick: () => setFilterOpen(false) }, "\u00D7")),
-                        React.createElement("div", { className: "filter-section" },
-                            React.createElement("span", null, "DOCUMENT STATUS"),
-                            ["All", "Requested", "For Review", "Approved", "For Revision"].map(x => React.createElement("label", { key: x },
-                                React.createElement("input", { type: "radio", name: "doc-status", checked: draftStatus === x, onChange: () => setDraftStatus(x) }),
-                                x))),
-                        React.createElement("div", { className: "filter-section" },
-                            React.createElement("span", null, "ADDITIONAL FILTERS"),
-                            React.createElement("label", null,
-                                "Requirement",
-                                React.createElement("select", null,
-                                    React.createElement("option", null, "All Requirements"),
-                                    React.createElement("option", null, "Faculty Information"),
-                                    React.createElement("option", null, "Syllabi"))),
-                            React.createElement("label", null,
-                                "Uploaded By",
-                                React.createElement("select", null,
-                                    React.createElement("option", null, "All Uploaders"),
-                                    React.createElement("option", null, "Ana Reyes"),
-                                    React.createElement("option", null, "Maria Santos")))),
-                        React.createElement("div", { className: "filter-actions" },
-                            React.createElement("button", { className: "btn secondary", onClick: () => setDraftStatus("All") }, "Clear Filters"),
-                            React.createElement("button", { className: "btn primary", onClick: () => { setStatus(draftStatus); setFilterOpen(false); } }, "Apply Filters")))),
-                React.createElement("select", { value: sort, onChange: e => setSort(e.target.value) },
-                    React.createElement("option", null, "Latest Uploaded"),
-                    React.createElement("option", null, "Oldest Uploaded"),
-                    React.createElement("option", null, "Recently Updated"),
-                    React.createElement("option", null, "Document Name A\u2013Z"),
-                    React.createElement("option", null, "Document Name Z\u2013A"))),
+                    React.createElement("input", { className: "doc-search-input", value: query, onChange: e => setQuery(e.target.value), placeholder: "Search document name, requirement, or uploader..." })),
+                React.createElement("div", { className: "doc-toolbar-actions" },
+                    React.createElement("div", { className: "filter-wrap" },
+                        React.createElement("button", { className: `doc-outlined-btn ${status !== "All" ? "has-filters" : ""}`, onClick: () => { setDraftStatus(status); setFilterOpen(!filterOpen); } },
+                            "Filter",
+                            status !== "All" && React.createElement("em", { className: "doc-filter-badge" }, "1")),
+                        filterOpen && React.createElement("div", { className: "filter-popover document-filter" },
+                            React.createElement("div", { className: "filter-popover-head" },
+                                React.createElement("b", null, "Filter Documents"),
+                                React.createElement("button", { onClick: () => setFilterOpen(false) }, "\u00D7")),
+                            React.createElement("div", { className: "filter-section" },
+                                React.createElement("span", null, "DOCUMENT STATUS"),
+                                ["All", "Requested", "For Review", "Approved", "For Revision", "Pending"].map(x => React.createElement("label", { key: x },
+                                    React.createElement("input", { type: "radio", name: "doc-status", checked: draftStatus === x, onChange: () => setDraftStatus(x) }),
+                                    x))),
+                            React.createElement("div", { className: "filter-actions" },
+                                React.createElement("button", { className: "btn secondary", onClick: () => setDraftStatus("All") }, "Clear Filters"),
+                                React.createElement("button", { className: "btn primary", onClick: () => { setStatus(draftStatus); setFilterOpen(false); } }, "Apply Filters")))),
+                    React.createElement("button", { className: "doc-outlined-btn", onClick: () => setSort(s => s === "Latest Upload" ? "Oldest Upload" : "Latest Upload") }, sort === "Oldest Uploaded" || sort === "Oldest Upload" ? "Oldest Upload" : "Latest Upload"))),
             React.createElement("table", null,
                 React.createElement("thead", null,
                     React.createElement("tr", null,
                         React.createElement("th", null, "Document"),
-                        React.createElement("th", null, "Related Record"),
-                        React.createElement("th", null, "Uploaded By"),
+                        React.createElement("th", null, "Record"),
+                        React.createElement("th", null, "Uploaded by"),
                         React.createElement("th", null, "Date Uploaded"),
-                        React.createElement("th", null, "Version"),
                         React.createElement("th", null, "Status"))),
                 React.createElement("tbody", null,
                     docs.map(d => React.createElement("tr", { className: "clickable-row document-row", key: d.name, onClick: () => openDocument(d.index) },
@@ -756,8 +797,8 @@ function Documents({ openDocument }) {
                                         "PDF \u2022 ",
                                         d.size)))),
                         React.createElement("td", null,
-                            React.createElement("b", null, d.requirement),
-                            React.createElement("small", null, d.record)),
+                            React.createElement("b", null, d.record || d.requirement || "—"),
+                            d.requirement && d.record && d.requirement !== d.record && React.createElement("small", null, d.requirement)),
                         React.createElement("td", null,
                             React.createElement("b", null, d.uploader),
                             React.createElement("small", null, d.role)),
@@ -765,11 +806,9 @@ function Documents({ openDocument }) {
                             d.date,
                             React.createElement("small", null, d.time)),
                         React.createElement("td", null,
-                            React.createElement("b", null, d.version)),
-                        React.createElement("td", null,
                             React.createElement(Badge, { status: d.status })))),
                     docs.length === 0 && React.createElement("tr", null,
-                        React.createElement("td", { colSpan: 6 },
+                        React.createElement("td", { colSpan: 5 },
                             React.createElement("div", { className: "requirements-empty" },
                                 React.createElement(UiIcon, { name: "file" }),
                                 React.createElement("b", null, "No documents found."),
@@ -1080,7 +1119,8 @@ function App() {
     const [selectedRecord, setSelectedRecord] = React.useState(sampleRecords["Faculty Information"][1]);
     const [addedRequirements, setAddedRequirements] = React.useState([]), [addedRecords, setAddedRecords] = React.useState([]);
     const [newReq, setNewReq] = React.useState({ name: "", category: "Faculty", description: "", responsible: "Program Head", year: "2026–2027" });
-    const [newRecord, setNewRecord] = React.useState({ name: "", description: "", responsible: "", type: "Required" });
+    const [newRecord, setNewRecord] = React.useState({ name: "", description: "", responsible: "Maria Santos - Program Head", type: "Required", status: "Pending" });
+    const [requestTargetRecord, setRequestTargetRecord] = React.useState(null), [recordOverrides, setRecordOverrides] = React.useState({});
     const [requestRequirement, setRequestRequirement] = React.useState("Laboratory Information"), [requestRecipient, setRequestRecipient] = React.useState("Rizal Lim — Office Representative"), [requestRemarks, setRequestRemarks] = React.useState("Please submit the laboratory information, including the list of laboratories, equipment, and specifications required for the COPC records."), [requestFile, setRequestFile] = React.useState(null);
     const [requestRequirementLocked, setRequestRequirementLocked] = React.useState(false);
     const done = (message, next) => { setModal(null); setToast(message); if (next)
@@ -1090,12 +1130,12 @@ function App() {
     if (!logged)
         return React.createElement(Login, { onLogin: (role) => { setCurrentRole(role); setLogged(true); } });
     return React.createElement("div", { className: "app" },
-        React.createElement(Header, { role: currentRole, notify: notify, onNotify: () => setNotify(!notify), onLogout: () => setModal("logout"), onSettings: () => setPage("settings"), notices: notices, markAll: markAll, openNotice: openNotice, viewAll: () => { setNotify(false); setPage("notifications"); } }),
+        React.createElement(Header, { role: currentRole, notify: notify, onNotify: () => setNotify(!notify), onLogout: () => { setLogged(false); setPage("dashboard"); }, onSettings: () => setPage("settings"), notices: notices, markAll: markAll, openNotice: openNotice, viewAll: () => { setNotify(false); setPage("notifications"); } }),
         React.createElement(Sidebar, { role: currentRole, page: page, setPage: setPage }),
         React.createElement("main", { className: "content" },
-            page === "dashboard" && (currentRole === "COPC Coordinator" ? React.createElement(Dashboard, { setPage: setPage, notify: notify, onNotify: () => setNotify(!notify), onLogout: () => setModal("logout"), openRequest: () => { setRequestRequirement("Laboratory Information"); setRequestRequirementLocked(true); setModal("request"); } }) : React.createElement(UserDashboard, { role: currentRole, setPage: setPage })),
+            page === "dashboard" && (currentRole === "COPC Coordinator" ? React.createElement(Dashboard, { setPage: setPage, notify: notify, onNotify: () => setNotify(!notify), onLogout: () => { setLogged(false); setPage("dashboard"); }, openRequest: () => { setRequestRequirement("Laboratory Information"); setRequestRequirementLocked(true); setModal("request"); } }) : React.createElement(UserDashboard, { role: currentRole, setPage: setPage })),
             page === "requirements" && React.createElement(Requirements, { addedRequirements: addedRequirements, openAdd: () => setModal("addRequirement"), openRequirement: (index) => { setSelectedRequirement(index); setPage("requirementDetail"); } }),
-            page === "requirementDetail" && React.createElement(RequirementDetails, { index: selectedRequirement, setPage: setPage, openRequest: () => { setRequestRequirement(requirements[selectedRequirement]?.name || addedRequirements[selectedRequirement - requirements.length]?.name || "Faculty Information"); setRequestRequirementLocked(true); setModal("request"); }, openAddRecord: () => setModal("addRecord"), openRecord: (record) => { setSelectedRecord(record); setPage("recordDetail"); }, addedRecords: addedRecords }),
+            page === "requirementDetail" && React.createElement(RequirementDetails, { index: selectedRequirement, setPage: setPage, openRequest: (rec) => { setRequestTargetRecord(rec || null); setRequestRequirement(requirements[selectedRequirement]?.name || addedRequirements[selectedRequirement - requirements.length]?.name || "Faculty Information"); setRequestRequirementLocked(true); if (rec?.assigned && rec.assigned !== "—") { setRequestRecipient(rec.assigned + (rec.role ? " — " + rec.role : "")); } setModal("request"); }, openAddRecord: () => setModal("addRecord"), openRecord: (record) => { setSelectedRecord(record); setPage("recordDetail"); }, addedRecords: addedRecords, recordOverrides: recordOverrides }),
             page === "recordDetail" && React.createElement(RecordDetails, { setPage: setPage, openRevision: () => setModal("revision"), openApprove: () => setModal("approve"), record: selectedRecord, parentRequirement: requirements[selectedRequirement]?.name || "Faculty Information" }),
             page === "requests" && React.createElement(Requests, { setPage: setPage }),
             page === "requestDetail" && React.createElement(RequestDetail, { setPage: setPage }),
@@ -1110,7 +1150,13 @@ function App() {
             React.createElement("div", null,
                 React.createElement("b", null, "Success"),
                 React.createElement("span", null, toast))),
-        modal === "request" && React.createElement(Modal, { title: "Send Document Request", onClose: () => setModal(null), action: () => setModal("requestConfirm"), actionLabel: "Send Request" },
+        modal === "request" && React.createElement(Modal, { title: "Send Document Request", onClose: () => setModal(null), action: () => {
+            if (requestTargetRecord) {
+                setRecordOverrides(prev => ({ ...prev, [requestTargetRecord.name]: { status: "Requested", updated: "Just now" } }));
+                setAddedRecords(prev => prev.map(rec => rec.name === requestTargetRecord.name ? { ...rec, status: "Requested", updated: "Just now" } : rec));
+            }
+            done(`Document request sent successfully — ${requestTargetRecord?.name || requestRequirement} was requested from ${requestRecipient.split(" — ")[0]}.`);
+        }, actionLabel: "Send Request" },
             React.createElement("div", { className: "modal-summary request-form" },
                 React.createElement("label", null,
                     "Program",
@@ -1159,21 +1205,15 @@ function App() {
                             " or drag and drop",
                             React.createElement("small", null, "PDF, DOC, DOCX, JPG, PNG \u2022 Max 10MB")),
                         React.createElement("input", { type: "file", accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png", onChange: e => setRequestFile(e.target.files?.[0] || null) }))))),
-        modal === "requestConfirm" && React.createElement(Modal, { title: "Send Document Request?", onClose: () => setModal("request"), action: () => done(`Document request sent successfully — ${requestRequirement} was requested from ${requestRecipient.split(" — ")[0]}.`, "requests"), actionLabel: "Confirm & Send" },
-            React.createElement("p", null,
-                "You are about to request ",
-                React.createElement("b", null,
-                    "\u201C",
-                    requestRequirement,
-                    "\u201D"),
-                " from ",
-                React.createElement("b", null,
-                    requestRecipient.replace(" — ", " ("),
-                    ")"),
-                "."),
-            React.createElement("p", { className: "confirmation-note" }, "The recipient will receive a notification and the request will be recorded in the system.")),
-        modal === "addRequirement" && React.createElement(Modal, { title: "Add COPC Requirement", onClose: () => setModal(null), action: () => setModal("addRequirementConfirm"), actionLabel: "Continue" },
-            React.createElement("p", { className: "modal-subtitle" }, "Create a new requirement for the program."),
+        modal === "addRequirement" && React.createElement(Modal, { title: "COPC Requirement", className: "add-requirement-modal", onClose: () => setModal(null), action: () => {
+            if (newReq.name) {
+                setAddedRequirements(x => [...x, newReq]);
+                done(`${newReq.name} was created successfully.`, "requirements");
+                setNewReq({ name: "", category: "Faculty", description: "", responsible: "Program Head", year: "2026–2027" });
+            } else {
+                setModal(null);
+            }
+        }, actionLabel: "Save", showClose: false },
             React.createElement("div", { className: "form-grid modal-form" },
                 React.createElement("label", null,
                     "Requirement Name *",
@@ -1183,69 +1223,37 @@ function App() {
                     React.createElement("select", { value: newReq.category, onChange: e => setNewReq({ ...newReq, category: e.target.value }) }, ["Faculty", "Curriculum", "Facilities", "Library", "Research", "Student Records", "Other"].map(x => React.createElement("option", { key: x }, x)))),
                 React.createElement("label", { className: "full" },
                     "Description *",
-                    React.createElement("textarea", { value: newReq.description, onChange: e => setNewReq({ ...newReq, description: e.target.value }) })),
-                React.createElement("label", null,
-                    "Responsible Personnel / Office",
-                    React.createElement("select", { value: newReq.responsible, onChange: e => setNewReq({ ...newReq, responsible: e.target.value }) },
-                        React.createElement("option", null, "Program Head"),
-                        React.createElement("option", null, "Faculty"),
-                        React.createElement("option", null, "Office Representative"),
-                        React.createElement("option", null, "Dean"))),
-                React.createElement("label", null,
-                    "Academic Year *",
-                    React.createElement("select", { value: newReq.year, onChange: e => setNewReq({ ...newReq, year: e.target.value }) },
-                        React.createElement("option", null, "2026\u20132027"),
-                        React.createElement("option", null, "2025\u20132026"))))),
-        modal === "addRequirementConfirm" && React.createElement(Modal, { title: "Create Requirement?", onClose: () => setModal("addRequirement"), action: () => { if (newReq.name) {
-                setAddedRequirements(x => [...x, newReq]);
-                done(`${newReq.name} was created successfully.`, "requirements");
-            } }, actionLabel: "Create Requirement" },
-            React.createElement("p", null,
-                "You are about to add ",
-                React.createElement("b", null,
-                    "\u201C",
-                    newReq.name || "this requirement",
-                    "\u201D"),
+                    React.createElement("textarea", { value: newReq.description, onChange: e => setNewReq({ ...newReq, description: e.target.value }) })))),
                 " as a new COPC requirement for Bachelor of Science in Information Technology.")),
-        modal === "addRecord" && React.createElement(Modal, { title: "Add Required Record", onClose: () => setModal(null), action: () => setModal("addRecordConfirm"), actionLabel: "Continue" },
-            React.createElement("div", { className: "form-grid modal-form" },
-                React.createElement("label", { className: "full" },
-                    "Parent Requirement",
-                    React.createElement("input", { value: "Faculty Information", readOnly: true })),
-                React.createElement("label", null,
-                    "Required Record Name *",
-                    React.createElement("input", { value: newRecord.name, onChange: e => setNewRecord({ ...newRecord, name: e.target.value }) })),
-                React.createElement("label", null,
-                    "Requirement Type",
-                    React.createElement("select", { value: newRecord.type, onChange: e => setNewRecord({ ...newRecord, type: e.target.value }) },
-                        React.createElement("option", null, "Required"),
-                        React.createElement("option", null, "Optional"))),
-                React.createElement("label", { className: "full" },
-                    "Description *",
-                    React.createElement("textarea", { value: newRecord.description, onChange: e => setNewRecord({ ...newRecord, description: e.target.value }) })),
-                React.createElement("label", null,
-                    "Responsible Personnel / Office",
-                    React.createElement("select", { value: newRecord.responsible, onChange: e => setNewRecord({ ...newRecord, responsible: e.target.value }) },
-                        React.createElement("option", { value: "" }, "Unassigned"),
-                        React.createElement("option", null, "Maria Santos \u2014 Program Head"),
-                        React.createElement("option", null, "Ana Reyes \u2014 Faculty"),
-                        React.createElement("option", null, "Rizal Lim \u2014 Office Representative"))),
-                React.createElement("label", null,
-                    "Status",
-                    React.createElement("select", null,
-                        React.createElement("option", null, "Active"),
-                        React.createElement("option", null, "Inactive"))))),
-        modal === "addRecordConfirm" && React.createElement(Modal, { title: "Add Required Record?", onClose: () => setModal("addRecord"), action: () => { if (newRecord.name) {
-                setAddedRecords(x => [...x, newRecord]);
-                done(`${newRecord.name} was added successfully.`, "requirementDetail");
-            } }, actionLabel: "Add Required Record" },
-            React.createElement("p", null,
-                "You are about to add ",
-                React.createElement("b", null,
-                    "\u201C",
-                    newRecord.name || "this record",
-                    "\u201D"),
-                " under Faculty Information.")),
+        modal === "addRecord" && React.createElement(Modal, {
+            title: "Required Record",
+            className: "required-record-modal",
+            showClose: false,
+            onClose: () => setModal(null),
+            action: () => {
+                if (newRecord.name) {
+                    setAddedRecords(x => [...x, { ...newRecord, responsible: newRecord.responsible || "Maria Santos - Program Head", status: "Pending" }]);
+                    done(`${newRecord.name} was added successfully.`, "requirementDetail");
+                    setNewRecord({ name: "", description: "", responsible: "Maria Santos - Program Head", type: "Required", status: "Pending" });
+                } else {
+                    setModal(null);
+                }
+            },
+            actionLabel: "Save"
+        },
+            React.createElement("div", { className: "required-record-form" },
+                React.createElement("div", { className: "record-form-group" },
+                    React.createElement("label", null, "Required Record Name"),
+                    React.createElement("input", { className: "record-form-input", value: newRecord.name, onChange: e => setNewRecord({ ...newRecord, name: e.target.value }) })),
+                React.createElement("div", { className: "record-form-group" },
+                    React.createElement("label", null, "Responsible Personnel"),
+                    React.createElement("div", { className: "record-select-wrapper" },
+                        React.createElement("select", { className: "record-form-select", value: newRecord.responsible || "Maria Santos - Program Head", onChange: e => setNewRecord({ ...newRecord, responsible: e.target.value }) },
+                            React.createElement("option", { value: "Maria Santos - Program Head" }, "Maria Santos - Program Head"),
+                            React.createElement("option", { value: "Ana Reyes - Faculty" }, "Ana Reyes - Faculty"),
+                            React.createElement("option", { value: "Rizal Lim - Office Representative" }, "Rizal Lim - Office Representative")),
+                        React.createElement("span", { className: "record-select-arrow" },
+                            React.createElement(UiIcon, { name: "chevron-down" })))))),
         modal === "revision" && React.createElement(Modal, { title: "Send revision request?", onClose: () => setModal(null), action: () => done("Revision request sent to Juan Dela Cruz.", "requests"), actionLabel: "Send revision request" },
             React.createElement("div", { className: "modal-doc" },
                 React.createElement("b", null, "Faculty Information"),
@@ -1262,9 +1270,7 @@ function App() {
             React.createElement("label", null,
                 "Approval remarks (optional)",
                 React.createElement("textarea", { placeholder: "Add an internal approval note..." })),
-            React.createElement("div", { className: "warning" }, "This is an internal document workflow decision. It does not indicate that CHED has granted a COPC.")),
-        modal === "logout" && React.createElement(Modal, { title: "Log Out?", onClose: () => setModal(null), action: () => { setModal(null); setLogged(false); setPage("dashboard"); }, actionLabel: "Log Out" },
-            React.createElement("p", null, "Are you sure you want to log out of the COPC Record Management System?")));
+            React.createElement("div", { className: "warning" }, "This is an internal document workflow decision. It does not indicate that CHED has granted a COPC.")));
 }
 
 

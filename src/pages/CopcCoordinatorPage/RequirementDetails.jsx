@@ -14,8 +14,9 @@ export function RequirementDetails({
   openRequest,
   openAddRecord,
   openRecord,
-  addedRecords,
+  addedRecords = [],
   addedRequirements = [],
+  recordOverrides = {},
 }) {
   const allRequirements = [...initialRequirements, ...addedRequirements];
   const requirement = allRequirements[index] ||
@@ -35,24 +36,46 @@ export function RequirementDetails({
       size: "",
       assigned: r.responsible || "—",
       role: "",
-      status: "Requested",
-      updated: "—",
+      status: r.status || "Pending",
+      updated: r.updated || "—",
       version: "—",
     })),
-  ];
+  ].map((rec) => {
+    if (recordOverrides[rec.name]) {
+      return { ...rec, ...recordOverrides[rec.name] };
+    }
+    return rec;
+  });
 
-  const records = allRecords.filter(
-    (r) =>
-      r.name.toLowerCase().includes(query.toLowerCase()) &&
-      (recordStatus === "All" || r.status === recordStatus)
-  );
+  const records = allRecords.filter((r) => {
+    const matchesQuery = r.name.toLowerCase().includes(query.toLowerCase());
+    if (!matchesQuery) return false;
+    if (recordStatus === "All") return true;
+
+    const isSubmitted = Boolean(
+      r.file ||
+      r.status === "Submitted" ||
+      r.status === "Approved" ||
+      r.status === "For Review" ||
+      r.status === "For Revision"
+    );
+
+    if (recordStatus === "Submitted") return isSubmitted;
+    if (recordStatus === "Not Submitted") return !isSubmitted;
+
+    return r.status === recordStatus;
+  });
 
   const approved = allRecords.filter((r) => r.status === "Approved").length;
   const pending = allRecords.filter(
     (r) => r.status === "Pending" || r.status === "For Review"
   ).length;
   const revision = allRecords.filter((r) => r.status === "For Revision").length;
-  const requested = allRecords.filter((r) => r.status === "Requested").length;
+  const notSubmitted = allRecords.filter(
+    (r) =>
+      !r.file &&
+      (r.status === "Not Submitted" || r.status === "Requested" || !r.status)
+  ).length;
 
   return (
     <>
@@ -71,7 +94,7 @@ export function RequirementDetails({
           [String(approved), "Approved", "green"],
           [String(pending), "Pending", "amber"],
           [String(revision), "For Revision", "red"],
-          [String(requested), "Requested", "blue"],
+          [String(notSubmitted), "Not Submitted", "blue"],
         ].map((x) => (
           <div key={x[1]}>
             <strong>{x[0]}</strong>
@@ -81,27 +104,25 @@ export function RequirementDetails({
       </div>
 
       <section className="card table-card required-records">
-        <div className="requirements-table-toolbar">
-          <div className="requirements-toolbar-title">
-            <b>Required Records</b>
-            <span>
-              Showing {records.length} of {allRecords.length} records
-            </span>
+        <div className="required-records-card-head">
+          <b>Required Records</b>
+        </div>
+
+        <div className="representative-toolbar">
+          <div className="search representative-search" style={{ maxWidth: "360px" }}>
+            <UiIcon name="search" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search records"
+              placeholder="Search Records"
+            />
           </div>
 
           <div className="requirements-actions">
-            <div className="search">
-              <UiIcon name="search" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                aria-label="Search records"
-                placeholder="Search records..."
-              />
-            </div>
-
             <div className="filter-wrap">
               <button
+                type="button"
                 className={`btn filter-button ${recordStatus !== "All" ? "has-filters" : ""}`}
                 onClick={() => {
                   setDraftRecordStatus(recordStatus);
@@ -110,7 +131,7 @@ export function RequirementDetails({
               >
                 <UiIcon name="filter" />
                 Filter
-                {recordStatus !== "All" && <em>0</em>}
+                {recordStatus !== "All" && <em>{recordStatus}</em>}
               </button>
 
               {recordFilterOpen && (
@@ -123,16 +144,29 @@ export function RequirementDetails({
                   </div>
 
                   <div className="record-status-options">
-                    <span>STATUS</span>
+                    <span className="filter-group-heading">REVIEW STATUS</span>
                     {[
                       "All",
                       "Approved",
                       "For Review",
-                      "Submitted",
-                      "Pending",
                       "For Revision",
+                      "Pending",
                       "Requested",
                     ].map((x) => (
+                      <label key={x}>
+                        <input
+                          type="radio"
+                          name="record-status"
+                          checked={draftRecordStatus === x}
+                          onChange={() => setDraftRecordStatus(x)}
+                        />
+                        {x}
+                      </label>
+                    ))}
+                    <span className="filter-group-heading" style={{ marginTop: "10px" }}>
+                      SUBMISSION
+                    </span>
+                    {["Submitted", "Not Submitted"].map((x) => (
                       <label key={x}>
                         <input
                           type="radio"
@@ -166,12 +200,13 @@ export function RequirementDetails({
               )}
             </div>
 
-            <button className="btn secondary" onClick={openAddRecord}>
-              ＋ Add Required Record
-            </button>
-            <button className="btn primary" onClick={openRequest}>
-              <UiIcon name="send" />
-              Send Request
+            <button
+              type="button"
+              className="btn primary send-request-main"
+              style={{ minWidth: "175px" }}
+              onClick={openAddRecord}
+            >
+              Add Required Record
             </button>
           </div>
         </div>
@@ -204,36 +239,67 @@ export function RequirementDetails({
             <tr>
               <th>#</th>
               <th>Required Record</th>
-              <th>Assigned To</th>
+              <th>Assigned to</th>
               <th>Status</th>
-              <th>Last Updated</th>
+              <th>Submission</th>
+              <th>Last updated</th>
             </tr>
           </thead>
           <tbody>
             {records.map((r, i) => (
               <tr
-                key={r.name}
+                key={r.name || i}
                 className="clickable-row"
-                onClick={() => (r.file ? openRecord(r) : openRequest())}
+                onClick={() => (r.file ? openRecord(r) : openRequest(r))}
               >
                 <td>{i + 1}</td>
                 <td>
                   <b>{r.name}</b>
-                  <small>{r.file || "No document submitted"}</small>
                 </td>
                 <td>
-                  {r.assigned === "—" ? "—" : `${r.assigned} — ${r.role}`}
+                  {r.assigned && r.assigned !== "—"
+                    ? r.role
+                      ? `${r.assigned} — ${r.role}`
+                      : r.assigned
+                    : "—"}
                 </td>
                 <td>
-                  <Badge status={r.status} />
+                  {r.status &&
+                  r.status !== "Not Submitted" &&
+                  r.status !== "Submitted" ? (
+                    <Badge status={r.status} />
+                  ) : (
+                    <span className="record-status-empty">—</span>
+                  )}
                 </td>
-                <td>{r.updated}</td>
+                <td>
+                  <div className="record-submission-col">
+                    <Badge
+                      status={
+                        r.file ||
+                        r.status === "Approved" ||
+                        r.status === "For Review" ||
+                        r.status === "For Revision" ||
+                        r.status === "Submitted"
+                          ? "Submitted"
+                          : "Not Submitted"
+                      }
+                    />
+                    {r.file && (
+                      <span className="record-submission-file" title={r.file}>
+                        <UiIcon name="file" />
+                        <span>{r.file}</span>
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td>{r.updated || "—"}</td>
               </tr>
             ))}
 
             {records.length === 0 && (
               <tr>
-                <td colSpan={5}>
+                <td colSpan={6}>
                   <div className="requirements-empty">
                     <UiIcon name="filter" />
                     <b>No required records match your filters.</b>
@@ -265,6 +331,7 @@ export function RecordDetails({
   openApprove,
   record,
   parentRequirement,
+  onUpdateRecord,
 }) {
   return (
     <DocumentDetails
@@ -275,6 +342,7 @@ export function RecordDetails({
       source="requirements"
       record={record}
       parentRequirement={parentRequirement}
+      onUpdateDocumentStatus={onUpdateRecord}
     />
   );
 }

@@ -3,7 +3,7 @@ export function PageHead({ title, subtitle, action }) {
     <div className="page-head">
       <div>
         <h1>{title}</h1>
-        <p>{subtitle}</p>
+        {subtitle && <p>{subtitle}</p>}
       </div>
       {action}
     </div>

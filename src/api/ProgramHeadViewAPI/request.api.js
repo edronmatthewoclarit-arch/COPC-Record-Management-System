@@ -1,6 +1,40 @@
 // Program Head Requests API
 
-export const initialProgramHeadRequests = [];
+export const initialProgramHeadRequests = [
+  {
+    id: 1,
+    requirement: "Faculty Information",
+    documentName: "Teaching Loads",
+    recipient: "Maria Santos",
+    recipientRole: "Faculty",
+    submissionDate: "2026-11-20",
+    date: "November 20, 2026",
+    status: "Pending",
+    instructions: "Submit signed 1st Semester teaching load sheets and faculty timetables.",
+  },
+  {
+    id: 2,
+    requirement: "Faculty Information",
+    documentName: "Teaching Loads & Class Schedules",
+    recipient: "Maria Santos",
+    recipientRole: "Faculty",
+    submissionDate: "2026-11-20",
+    date: "November 20, 2026",
+    status: "Pending",
+    instructions: "Submit signed 1st Semester teaching load sheets and faculty timetables.",
+  },
+  {
+    id: 3,
+    requirement: "Facilities & Equipment",
+    documentName: "Laboratory Facility Specifications",
+    recipient: "Engr. Rizal Lim",
+    recipientRole: "Office Representative",
+    submissionDate: "2026-11-25",
+    date: "November 25, 2026",
+    status: "Completed",
+    instructions: "Attach certified networking and computer lab equipment specs.",
+  },
+];
 
 export { initialFacultyRecords } from "./faculty.api";
 

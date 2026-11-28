@@ -1,6 +1,7 @@
 export function Badge({ status }) {
+  const normalized = (status || "").toLowerCase().replace(/\s+/g, "-");
   return (
-    <span className={`badge ${status.toLowerCase().replace(" ", "-")}`}>
+    <span className={`badge ${normalized}`}>
       {status}
     </span>
   );

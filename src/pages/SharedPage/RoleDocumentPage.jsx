@@ -202,12 +202,12 @@ export function RoleDocumentPage({
                   >
                     <td>
                       <div className="document-file">
-                        <i>PDF</i>
+                        {d.status !== "Requested" && <i>PDF</i>}
                         <div>
-                          <b>{d.name}</b>
+                          <b>{d.status === "Requested" ? d.name.replace(/\.pdf$/i, "") : d.name}</b>
                           {d.record && (
                             <span className="role-doc-record">
-                              {d.record} • {d.size || "1.8 MB"}
+                              {d.record}{d.status !== "Requested" ? ` • ${d.size || "1.8 MB"}` : ""}
                             </span>
                           )}
                         </div>

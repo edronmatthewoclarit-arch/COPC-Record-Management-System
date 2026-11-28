@@ -21,6 +21,9 @@ export function NewRequestModal({
   const [facultySearch, setFacultySearch] = useState("");
   const [showAddFaculty, setShowAddFaculty] = useState(false);
   const [newFaculty, setNewFaculty] = useState({
+    firstName: "",
+    middleName: "",
+    lastName: "",
     name: "",
     position: "",
     program: "Information Technology",
@@ -64,8 +67,16 @@ export function NewRequestModal({
   // Add new faculty member (without status)
   const handleSaveFaculty = (e) => {
     if (e) e.preventDefault();
-    if (!newFaculty.name.trim()) {
-      setFacultyFormError("Faculty name is required.");
+    const f = newFaculty.firstName?.trim() || "";
+    const m = newFaculty.middleName?.trim() || "";
+    const l = newFaculty.lastName?.trim() || "";
+
+    if (!f) {
+      setFacultyFormError("First name is required.");
+      return;
+    }
+    if (!l) {
+      setFacultyFormError("Last name is required.");
       return;
     }
     if (!newFaculty.position.trim()) {
@@ -85,9 +96,20 @@ export function NewRequestModal({
       return;
     }
 
+    let fullName = "";
+    if (m) {
+      const initial = m.replace(/\.+$/, "")[0]?.toUpperCase();
+      fullName = `${f} ${initial ? `${initial}. ` : ""}${l}`;
+    } else {
+      fullName = `${f} ${l}`;
+    }
+
     const created = {
       id: Date.now(),
-      name: newFaculty.name.trim(),
+      name: fullName,
+      firstName: f,
+      middleName: m,
+      lastName: l,
       position: newFaculty.position.trim(),
       program: newFaculty.program.trim(),
       email: newFaculty.email.trim(),
@@ -102,6 +124,9 @@ export function NewRequestModal({
 
     // Reset faculty form
     setNewFaculty({
+      firstName: "",
+      middleName: "",
+      lastName: "",
       name: "",
       position: "",
       program: "Information Technology",
@@ -345,20 +370,51 @@ export function NewRequestModal({
 
                   <form onSubmit={handleSaveFaculty}>
                     <div className="form-grid ph-faculty-form-grid">
-                      <label>
-                        Faculty Name *
-                        <input
-                          type="text"
-                          value={newFaculty.name}
-                          onChange={(e) =>
-                            setNewFaculty({
-                              ...newFaculty,
-                              name: e.target.value,
-                            })
-                          }
-                          autoFocus
-                        />
-                      </label>
+                      <div className="rep-name-row full" style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                        <label>
+                          First Name *
+                          <input
+                            type="text"
+                            value={newFaculty.firstName}
+                            onChange={(e) =>
+                              setNewFaculty({
+                                ...newFaculty,
+                                firstName: e.target.value,
+                              })
+                            }
+                            placeholder="e.g. Maria"
+                            autoFocus
+                          />
+                        </label>
+                        <label>
+                          Middle Name
+                          <input
+                            type="text"
+                            value={newFaculty.middleName}
+                            onChange={(e) =>
+                              setNewFaculty({
+                                ...newFaculty,
+                                middleName: e.target.value,
+                              })
+                            }
+                            placeholder="e.g. Santos"
+                          />
+                        </label>
+                        <label>
+                          Last Name *
+                          <input
+                            type="text"
+                            value={newFaculty.lastName}
+                            onChange={(e) =>
+                              setNewFaculty({
+                                ...newFaculty,
+                                lastName: e.target.value,
+                              })
+                            }
+                            placeholder="e.g. Cruz"
+                          />
+                        </label>
+                      </div>
 
                       <label>
                         Position *

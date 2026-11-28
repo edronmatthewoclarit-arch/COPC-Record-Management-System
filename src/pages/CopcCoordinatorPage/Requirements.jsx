@@ -105,10 +105,7 @@ export function Requirements({
 
   return (
     <>
-      <PageHead
-        title="Program Requirements"
-        subtitle="Bachelor of Science in Information Technology"
-      />
+      <PageHead title="Program Requirements" />
 
       <section className="card requirement-summary">
         <div

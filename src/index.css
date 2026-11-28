@@ -1283,21 +1283,24 @@ table {
 }
 
 th {
-  background: #f8fafc;
-  color: #718096;
+  background: #f1f5f9;
+  color: #1e293b;
   text-align: left;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 11px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
 }
 
 td {
-  padding: 11px 12px;
+  padding: 11px 16px;
   border-bottom: 1px solid #edf1f5;
-  font-size: 10px;
-  color: #435269;
+  font-size: 12px;
+  color: #334155;
+  vertical-align: middle;
 }
 
 tr:hover td,
@@ -1306,15 +1309,16 @@ tr.selected td {
 }
 
 td b {
-  color: #24364c;
-  font-size: 10px
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 td small {
   display: block;
-  color: var(--muted);
-  font-size: 8px;
-  margin-top: 3px
+  color: #64748b;
+  font-size: 10.5px;
+  margin-top: 2px
 }
 
 .table-action {
@@ -2263,14 +2267,15 @@ td small {
   color: #062b5c;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
   padding: 8px 24px;
   flex: 0 0 auto
 }
 
 .university-brand .seal {
-  width: 55px;
-  height: 55px
+  width: 58px;
+  height: 58px
 }
 
 .university-brand>div {
@@ -3105,7 +3110,8 @@ nav button.active {
 }
 
 .modal-head h2:before {
-  content: "↗";
+  content: none;
+  display: none;
   color: #0872e8;
   margin-right: 12px
 }
@@ -3926,6 +3932,14 @@ nav button em {
 }
 
 .logout-modal .modal-head h2:before {
+  content: none
+}
+
+.add-requirement-modal .icon-btn {
+  display: none;
+}
+
+.add-requirement-modal .modal-head h2:before {
   content: none
 }
 
@@ -5231,6 +5245,18 @@ nav button em {
   grid-column: 1/-1
 }
 
+.rep-name-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 600px) {
+  .rep-name-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 .modal-form label {
   margin-top: 8px
 }
@@ -5406,7 +5432,7 @@ nav button em {
 }
 
 .document-file b {
-  font-size: 13px
+  font-size: 12px
 }
 
 .document-row:hover .document-file b {

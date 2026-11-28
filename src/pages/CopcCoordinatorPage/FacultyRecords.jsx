@@ -6,8 +6,25 @@ import {
 } from "../../api/ProgramHeadViewAPI/faculty.api";
 import PageHead from "../../components/ui/PageHead";
 import UiIcon from "../../components/ui/UiIcon";
+import Modal from "../../components/ui/Modal";
+
+const formatFullNameWithMiddleInitial = (firstName, middleName, lastName) => {
+  const f = firstName?.trim() || "";
+  const m = middleName?.trim() || "";
+  const l = lastName?.trim() || "";
+
+  if (!f && !l) return "";
+  if (m) {
+    const initial = m.replace(/\.+$/, "")[0]?.toUpperCase();
+    return [f, initial ? `${initial}.` : "", l].filter(Boolean).join(" ");
+  }
+  return [f, l].filter(Boolean).join(" ");
+};
 
 const emptyForm = {
+  firstName: "",
+  middleName: "",
+  lastName: "",
   name: "",
   position: "",
   email: "",
@@ -42,9 +59,30 @@ export function FacultyRecords({
 
   const openEditModal = (faculty) => {
     setEditingId(faculty.id);
+    let fn = faculty.firstName || "";
+    let mn = faculty.middleName || "";
+    let ln = faculty.lastName || "";
+
+    if (!fn && faculty.name) {
+      const parts = faculty.name.trim().split(/\s+/);
+      if (parts.length === 1) {
+        fn = parts[0];
+      } else if (parts.length === 2) {
+        fn = parts[0];
+        ln = parts[1];
+      } else if (parts.length > 2) {
+        fn = parts[0];
+        mn = parts.slice(1, -1).join(" ");
+        ln = parts[parts.length - 1];
+      }
+    }
+
     setForm({
+      firstName: fn,
+      middleName: mn,
+      lastName: ln,
       name: faculty.name || "",
-      position: faculty.position || "",
+      position: faculty.position || faculty.rank || "",
       email: faculty.email || "",
       contact: faculty.contact || "",
       program: faculty.program || "Information Technology",
@@ -54,14 +92,20 @@ export function FacultyRecords({
   };
 
   const handleSave = async () => {
-    const trimmedName = form.name.trim();
+    const trimmedFirst = form.firstName.trim();
+    const trimmedMiddle = form.middleName.trim();
+    const trimmedLast = form.lastName.trim();
     const trimmedPosition = form.position.trim();
     const trimmedEmail = form.email.trim().toLowerCase();
     const trimmedContact = form.contact.trim();
     const trimmedProgram = form.program.trim();
 
-    if (!trimmedName) {
-      setFormError("Faculty Name is required.");
+    if (!trimmedFirst) {
+      setFormError("First Name is required.");
+      return;
+    }
+    if (!trimmedLast) {
+      setFormError("Last Name is required.");
       return;
     }
     if (!trimmedPosition) {
@@ -77,11 +121,17 @@ export function FacultyRecords({
       return;
     }
 
+    const formattedName = formatFullNameWithMiddleInitial(
+      trimmedFirst,
+      trimmedMiddle,
+      trimmedLast
+    );
+
     const duplicate = facultyRecords.find(
       (f) =>
         f.id !== editingId &&
         ((f.email || "").toLowerCase() === trimmedEmail ||
-          ((f.name || "").toLowerCase() === trimmedName.toLowerCase() &&
+          ((f.name || "").toLowerCase() === formattedName.toLowerCase() &&
             (f.program || "").toLowerCase() === trimmedProgram.toLowerCase()))
     );
     if (duplicate) {
@@ -90,7 +140,10 @@ export function FacultyRecords({
     }
 
     const payload = {
-      name: trimmedName,
+      name: formattedName,
+      firstName: trimmedFirst,
+      middleName: trimmedMiddle,
+      lastName: trimmedLast,
       position: trimmedPosition,
       email: trimmedEmail,
       contact: trimmedContact,
@@ -105,11 +158,11 @@ export function FacultyRecords({
           ...payload,
         });
         onUpdateFaculty?.(updated);
-        onNotify?.(`Updated faculty record for ${trimmedName}.`);
+        onNotify?.(`Updated faculty record for ${formattedName}.`);
       } else {
         const created = await addFacultyRecord(payload);
         onAddFaculty?.(created);
-        onNotify?.(`Added ${trimmedName} to faculty records.`);
+        onNotify?.(`Added ${formattedName} to faculty records.`);
       }
       setModalOpen(false);
       setForm(emptyForm);
@@ -178,13 +231,22 @@ export function FacultyRecords({
             {filtered.length > 0 ? (
               filtered.map((f, index) => {
                 const status = f.status || "Active";
+                let displayName = f.name;
+                if (f.firstName && f.lastName) {
+                  displayName = formatFullNameWithMiddleInitial(
+                    f.firstName,
+                    f.middleName,
+                    f.lastName
+                  );
+                }
+
                 return (
                   <tr key={f.id || `${f.email || f.name}-${index}`}>
-                    <td>{f.name}</td>
-                    <td>{f.position}</td>
-                    <td>{f.program}</td>
+                    <td>{displayName || f.name}</td>
+                    <td>{f.position || f.rank}</td>
+                    <td>{f.program || "Information Technology"}</td>
                     <td>{f.email}</td>
-                    <td>{f.contact}</td>
+                    <td>{f.contact || "—"}</td>
                     <td>
                       <span className={`rep-status ${status.toLowerCase()}`}>
                         {status}
@@ -208,92 +270,98 @@ export function FacultyRecords({
         </table>
       </section>
 
-      {modalOpen &&
-        createPortal(
-          <div
-            className="modal-backdrop"
-            onMouseDown={() => {
-              setModalOpen(false);
-              setFormError("");
-            }}
-          >
-            <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
-              <div className="modal-head">
-                <div>
-                  <h2>Faculty</h2>
-                </div>
-                <button
-                  className="icon-btn"
-                  onClick={() => {
-                    setModalOpen(false);
-                    setFormError("");
-                  }}
-                  aria-label="Close modal"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className="modal-body">
-                {formError && (
-                  <div className="ph-modal-error" style={{ marginBottom: "12px" }}>
-                    {formError}
-                  </div>
-                )}
-                <div
-                  className="form-grid modal-form"
-                  style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-                >
-                  <label>
-                    Faculty Name
-                    <input
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    Position
-                    <input
-                      value={form.position}
-                      onChange={(e) => setForm({ ...form, position: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    Email
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    />
-                  </label>
-                  <label>
-                    Contact Number
-                    <input
-                      value={form.contact}
-                      onChange={(e) => setForm({ ...form, contact: e.target.value })}
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  className="btn secondary"
-                  onClick={() => {
-                    setModalOpen(false);
-                    setFormError("");
-                  }}
-                >
-                  Cancel
-                </button>
-                <button className="btn primary" onClick={handleSave}>
-                  Send
-                </button>
-              </div>
+      {modalOpen && (
+        <Modal
+          title={editingId !== null ? "Edit Faculty" : "Add Faculty"}
+          className="add-representative-modal add-faculty-modal"
+          showClose={false}
+          onClose={() => {
+            setModalOpen(false);
+            setFormError("");
+          }}
+          action={handleSave}
+          actionLabel={editingId !== null ? "Save Changes" : "Save"}
+        >
+          {formError && (
+            <div className="ph-modal-error" style={{ marginBottom: "12px" }}>
+              {formError}
             </div>
-          </div>,
-          document.body
-        )}
+          )}
+          <div className="form-grid modal-form">
+            <div className="rep-name-row full">
+              <label>
+                First Name *
+                <input
+                  value={form.firstName}
+                  onChange={(e) =>
+                    setForm({ ...form, firstName: e.target.value })
+                  }
+                  placeholder="e.g. Maria"
+                  autoFocus
+                />
+              </label>
+              <label>
+                Middle Name
+                <input
+                  value={form.middleName}
+                  onChange={(e) =>
+                    setForm({ ...form, middleName: e.target.value })
+                  }
+                  placeholder="e.g. Santos"
+                />
+              </label>
+              <label>
+                Last Name *
+                <input
+                  value={form.lastName}
+                  onChange={(e) =>
+                    setForm({ ...form, lastName: e.target.value })
+                  }
+                  placeholder="e.g. Cruz"
+                />
+              </label>
+            </div>
+            <label>
+              Position *
+              <input
+                value={form.position}
+                onChange={(e) =>
+                  setForm({ ...form, position: e.target.value })
+                }
+                placeholder="e.g. Instructor I"
+              />
+            </label>
+            <label>
+              Program
+              <input
+                value={form.program}
+                onChange={(e) =>
+                  setForm({ ...form, program: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Email *
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="e.g. maria.cruz@msunaawan.edu.ph"
+              />
+            </label>
+            <label>
+              Contact Number *
+              <input
+                value={form.contact}
+                onChange={(e) =>
+                  setForm({ ...form, contact: e.target.value })
+                }
+                placeholder="e.g. 09123456789"
+              />
+            </label>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

@@ -72,35 +72,36 @@ export function CoordinatorDashboard({ setPage }) {
                 Recent Activities
               </h2>
             </div>
-            <button className="link" onClick={() => setPage("requests")}>
-              View All
-            </button>
           </div>
 
-          {recentActivities.map((item) => (
-            <div className="activity" key={`${item.name}-${item.time}`}>
-              <i className={item.tone}>
-                <UiIcon
-                  name={
-                    item.tone === "upload"
-                      ? "upload"
-                      : item.tone === "revision"
-                        ? "revision"
-                        : item.tone === "approval"
-                          ? "check"
-                          : "send"
-                  }
-                />
-              </i>
-              <div>
-                <p>
-                  <b>{item.name}</b> {item.action}
-                </p>
-                <span>{item.meta}</span>
+          {recentActivities && recentActivities.length > 0 ? (
+            recentActivities.map((item) => (
+              <div className="activity" key={`${item.name}-${item.time}`}>
+                <i className={item.tone}>
+                  <UiIcon
+                    name={
+                      item.tone === "upload"
+                        ? "upload"
+                        : item.tone === "revision"
+                          ? "revision"
+                          : item.tone === "approval"
+                            ? "check"
+                            : "send"
+                    }
+                  />
+                </i>
+                <div>
+                  <p>
+                    <b>{item.name}</b> {item.action}
+                  </p>
+                  <span>{item.meta}</span>
+                </div>
+                <time>{item.time}</time>
               </div>
-              <time>{item.time}</time>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="empty-state">No recent activities yet.</p>
+          )}
         </section>
 
         <section className="card">
@@ -111,25 +112,26 @@ export function CoordinatorDashboard({ setPage }) {
                 Document Updates
               </h2>
             </div>
-            <button className="link" onClick={() => setPage("documents")}>
-              View All
-            </button>
           </div>
 
-          {documentUpdates.map((item) => (
-            <div className="doc-update" key={`${item.name}-${item.time}`}>
-              <i className={`update-icon ${item.tone}`}>
-                <UiIcon name={item.tone === "approval" ? "check" : "users"} />
-              </i>
-              <div>
-                <p>
-                  <b>{item.name}</b> {item.action}
-                </p>
-                <span>{item.meta}</span>
+          {documentUpdates && documentUpdates.length > 0 ? (
+            documentUpdates.map((item) => (
+              <div className="doc-update" key={`${item.name}-${item.time}`}>
+                <i className={`update-icon ${item.tone}`}>
+                  <UiIcon name={item.tone === "approval" ? "check" : "users"} />
+                </i>
+                <div>
+                  <p>
+                    <b>{item.name}</b> {item.action}
+                  </p>
+                  <span>{item.meta}</span>
+                </div>
+                <time>{item.time}</time>
               </div>
-              <time>{item.time}</time>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="empty-state">No document updates yet.</p>
+          )}
         </section>
       </div>
     </>

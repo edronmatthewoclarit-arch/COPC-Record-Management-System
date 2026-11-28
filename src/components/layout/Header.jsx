@@ -8,10 +8,6 @@ export function Header({ onLogout, role }) {
     <header>
       <div className="university-brand">
         <Seal dark />
-        <div>
-          <b>Mindanao State University</b>
-          <span>at Naawan</span>
-        </div>
       </div>
 
       <div className="header-title">

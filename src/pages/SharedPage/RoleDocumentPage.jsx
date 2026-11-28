@@ -137,6 +137,7 @@ export function RoleDocumentPage({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search sent documents"
+              placeholder="Search sent documents..."
             />
           </div>
 

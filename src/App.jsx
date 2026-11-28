@@ -271,6 +271,22 @@ export function App() {
                 setSelectedDocObj(docObj);
                 setPage("documentDetail");
               }}
+              onRequest={currentRole === "Program Head" ? (newReqData) => {
+                const newEntry = [
+                  newReqData.documentName,
+                  newReqData.uploader,
+                  newReqData.date,
+                  "Requested",
+                ];
+                newEntry.documentName = newReqData.documentName;
+                newEntry.uploader = newReqData.uploader;
+                newEntry.date = newReqData.date;
+                newEntry.status = "Requested";
+
+                setDocuments((prev) => [newEntry, ...prev]);
+                setToast(`Document request for "${newReqData.documentName}" created.`);
+                setTimeout(() => setToast(""), 3000);
+              } : undefined}
             />
           )}
 

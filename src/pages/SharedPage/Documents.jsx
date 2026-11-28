@@ -1,29 +1,37 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { initialDocuments } from "../../api/CopcViewAPI/document.api";
 import Badge from "../../components/ui/Badge";
 import PageHead from "../../components/ui/PageHead";
 import UiIcon from "../../components/ui/UiIcon";
+import Modal from "../../components/ui/Modal";
 
 export function Documents({
   documents = initialDocuments,
   openDocument,
   userRole = "Program Head",
   userProgram = "Information Technology",
+  onRequest,
 }) {
+  const isCoordinator = userRole === "COPC Coordinator";
+  const isProgramHead = userRole === "Program Head";
+  const isDean = userRole === "Dean";
+  const isSubmitterRole =
+    userRole === "Dean" ||
+    userRole === "Faculty" ||
+    userRole === "Office Representative";
+
   const [query, setQuery] = useState("");
   const [filterOpen, setFilterOpen] = useState(false);
   const [status, setStatus] = useState("All");
   const [roleFilter, setRoleFilter] = useState("All");
   const [draftStatus, setDraftStatus] = useState("All");
   const [draftRole, setDraftRole] = useState("All");
-  const [sort, setSort] = useState("Latest Uploaded");
-
-  const isCoordinator = userRole === "COPC Coordinator";
-  const isProgramHead = userRole === "Program Head";
-  const isSubmitterRole =
-    userRole === "Dean" ||
-    userRole === "Faculty" ||
-    userRole === "Office Representative";
+  const [requestModalOpen, setRequestModalOpen] = useState(false);
+  const [requestDocName, setRequestDocName] = useState("");
+  const [requestUploader, setRequestUploader] = useState("");
+  const [requestDate, setRequestDate] = useState("");
+  const [requestError, setRequestError] = useState("");
 
   // Scope documents by academic program and user role
   const scopedDocuments = documents.filter((d) => {
@@ -74,57 +82,78 @@ export function Documents({
         (roleFilter === "All" || (d.role || "") === roleFilter)
     );
 
-  if (sort === "Document Name A–Z") {
-    docs.sort((a, b) => a.name.localeCompare(b.name));
-  }
-  if (sort === "Document Name Z–A") {
-    docs.sort((a, b) => b.name.localeCompare(a.name));
-  }
-  if (sort === "Oldest Uploaded") {
-    docs.reverse();
-  }
-
-  const pageTitle = isProgramHead || isSubmitterRole ? "Program Documents" : "Documents";
+  const pageTitle = isProgramHead || isDean ? "Program Documents" : "Documents";
   const pageSubtitle = isCoordinator
     ? "Centralized submissions from Deans, Faculty Members, and Office Representatives."
     : isProgramHead
       ? `Centralized documents submitted by Deans, Faculty, and Office Representatives for ${userProgram}.`
-      : "View and track your COPC document submissions.";
+      : "";
 
   const activeFilterCount =
     (status !== "All" ? 1 : 0) + (roleFilter !== "All" ? 1 : 0);
+
+  const handleRequestSubmit = (e) => {
+    e.preventDefault();
+    if (!requestDocName.trim()) {
+      setRequestError("Document name is required.");
+      return;
+    }
+    if (!requestUploader.trim()) {
+      setRequestError("Uploader is required.");
+      return;
+    }
+    if (!requestDate.trim()) {
+      setRequestError("Date is required.");
+      return;
+    }
+    setRequestError("");
+    if (onRequest) {
+      onRequest({
+        documentName: requestDocName.trim(),
+        uploader: requestUploader.trim(),
+        date: requestDate.trim(),
+      });
+    }
+    setRequestDocName("");
+    setRequestUploader("");
+    setRequestDate("");
+    setRequestModalOpen(false);
+  };
 
   return (
     <>
       <PageHead title={pageTitle} subtitle={pageSubtitle} />
 
-      <section className="card document-summary">
-        {[
-          [String(allCount), "All Documents", "file", "navy"],
-          [String(reviewCount), "For Review", "clock", "amber"],
-          [String(approvedCount), "Approved", "check", "green"],
-          [String(revisionCount), "For Revision", "revision", "red"],
-        ].map((x) => (
-          <div key={x[1]}>
-            <i className={x[3]}>
-              <UiIcon name={x[2]} />
-            </i>
-            <span>
-              <strong>{x[0]}</strong>
-              <small>{x[1]}</small>
-            </span>
-          </div>
-        ))}
-      </section>
+      {!isProgramHead && !isDean && userRole !== "Faculty" && userRole !== "Office Representative" && (
+        <section className="card document-summary">
+          {[
+            [String(allCount), "All Documents", "file", "navy"],
+            [String(reviewCount), "For Review", "clock", "amber"],
+            [String(approvedCount), "Approved", "check", "green"],
+            [String(revisionCount), "For Revision", "revision", "red"],
+          ].map((x) => (
+            <div key={x[1]}>
+              <i className={x[3]}>
+                <UiIcon name={x[2]} />
+              </i>
+              <span>
+                <strong>{x[0]}</strong>
+                <small>{x[1]}</small>
+              </span>
+            </div>
+          ))}
+        </section>
+      )}
 
       <section className="card table-card documents-workspace">
         <div className="document-toolbar">
-          <div className="search">
+          <div className="search representative-search">
             <UiIcon name="search" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search documents"
+              placeholder={isCoordinator ? "Search Documents" : isProgramHead ? "Search program documents..." : "Search documents..."}
             />
           </div>
 
@@ -224,25 +253,50 @@ export function Documents({
             )}
           </div>
 
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            aria-label="Sort documents"
-          >
-            <option>Latest Uploaded</option>
-            <option>Oldest Uploaded</option>
-            <option>Recently Updated</option>
-            <option>Document Name A–Z</option>
-            <option>Document Name Z–A</option>
-          </select>
+          {isProgramHead && (
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => setRequestModalOpen(true)}
+              style={{ marginLeft: "8px" }}
+            >
+              Request
+            </button>
+          )}
         </div>
 
         <table>
           <thead>
             <tr>
-              <th>Document</th>
-              <th>Date</th>
-              <th>Status</th>
+              {isCoordinator ? (
+                <>
+                  <th>Document</th>
+                  <th>Record</th>
+                  <th>Uploaded By</th>
+                  <th>Date Uploaded</th>
+                  <th>Status</th>
+                </>
+              ) : isProgramHead ? (
+                <>
+                  <th>Document Name</th>
+                  <th>Uploaded By</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </>
+              ) : isDean ? (
+                <>
+                  <th>Document Name</th>
+                  <th>Uploaded By</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </>
+              ) : (
+                <>
+                  <th>Document</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -252,31 +306,117 @@ export function Documents({
                 className="clickable-row document-row"
                 onClick={() => openDocument(d.index !== -1 ? d.index : 0, d)}
               >
-                <td>
-                  <div className="document-file">
-                    <i>PDF</i>
-                    <span>
-                      <b>{d.name}</b>
-                      <small>
-                        PDF • {d.size || "1.8 MB"}
-                        {d.program ? ` • ${d.program}` : ""}
-                      </small>
-                    </span>
-                  </div>
-                </td>
-                <td>
-                  {d.date}
-                  {d.time && <small>{d.time}</small>}
-                </td>
-                <td>
-                  <Badge status={d.status} />
-                </td>
+                {isCoordinator ? (
+                  <>
+                    <td>
+                      <div className="document-file">
+                        <i>PDF</i>
+                        <span>
+                          <b>{d.name}</b>
+                          <small>
+                            PDF • {d.size || "1.8 MB"}
+                            {d.program ? ` • ${d.program}` : ""}
+                          </small>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <b>{d.requirement || "—"}</b>
+                      <small>{d.record || d.name}</small>
+                    </td>
+                    <td>
+                      <b>{d.uploader}</b>
+                      <small>{d.role || userRole}</small>
+                    </td>
+                    <td>
+                      {d.date}
+                      {d.time && <small>{d.time}</small>}
+                    </td>
+                    <td>
+                      <Badge status={d.status} />
+                    </td>
+                  </>
+                ) : isProgramHead ? (
+                  <>
+                    <td>
+                      <div className="document-file">
+                        <i>PDF</i>
+                        <span>
+                          <b>{d.name}</b>
+                          <small>
+                            PDF • {d.size || "1.8 MB"}
+                            {d.program ? ` • ${d.program}` : ""}
+                          </small>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <b>{d.uploader}</b>
+                      <small>{d.role || userRole}</small>
+                    </td>
+                    <td>
+                      {d.date}
+                      {d.time && <small>{d.time}</small>}
+                    </td>
+                    <td>
+                      <Badge status={d.status} />
+                    </td>
+                  </>
+                ) : isDean ? (
+                  <>
+                    <td>
+                      <div className="document-file">
+                        <i>PDF</i>
+                        <span>
+                          <b>{d.name}</b>
+                          <small>
+                            PDF • {d.size || "1.8 MB"}
+                            {d.program ? ` • ${d.program}` : ""}
+                          </small>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <b>{d.uploader}</b>
+                      <small>{d.role || userRole}</small>
+                    </td>
+                    <td>
+                      {d.date}
+                      {d.time && <small>{d.time}</small>}
+                    </td>
+                    <td>
+                      <Badge status={d.status} />
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td>
+                      <div className="document-file">
+                        <i>PDF</i>
+                        <span>
+                          <b>{d.name}</b>
+                          <small>
+                            PDF • {d.size || "1.8 MB"}
+                            {d.program ? ` • ${d.program}` : ""}
+                          </small>
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      {d.date}
+                      {d.time && <small>{d.time}</small>}
+                    </td>
+                    <td>
+                      <Badge status={d.status} />
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
 
             {docs.length === 0 && (
               <tr>
-                <td colSpan={3}>
+                <td colSpan={isCoordinator ? 5 : isProgramHead || isDean ? 4 : 3}>
                   <div className="requirements-empty">
                     <UiIcon name="file" />
                     <b>No documents found.</b>
@@ -288,6 +428,64 @@ export function Documents({
           </tbody>
         </table>
       </section>
+
+      {requestModalOpen &&
+        createPortal(
+          <Modal
+            title="New Document Request"
+            subtitle="Enter the document details to create a new request."
+            onClose={() => setRequestModalOpen(false)}
+            action={handleRequestSubmit}
+            actionLabel="Send"
+          >
+            <form onSubmit={handleRequestSubmit}>
+              {requestError && (
+                <div className="ph-modal-error" style={{ marginBottom: "12px" }}>
+                  {requestError}
+                </div>
+              )}
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <label>
+                  Document Name *
+                  <input
+                    type="text"
+                    value={requestDocName}
+                    onChange={(e) => {
+                      setRequestDocName(e.target.value);
+                      if (requestError) setRequestError("");
+                    }}
+                    placeholder="Enter document name"
+                    autoFocus
+                  />
+                </label>
+                <label>
+                  Uploader *
+                  <input
+                    type="text"
+                    value={requestUploader}
+                    onChange={(e) => {
+                      setRequestUploader(e.target.value);
+                      if (requestError) setRequestError("");
+                    }}
+                    placeholder="Enter uploader name"
+                  />
+                </label>
+                <label>
+                  Date *
+                  <input
+                    type="date"
+                    value={requestDate}
+                    onChange={(e) => {
+                      setRequestDate(e.target.value);
+                      if (requestError) setRequestError("");
+                    }}
+                  />
+                </label>
+              </div>
+            </form>
+          </Modal>,
+          document.body
+        )}
     </>
   );
 }

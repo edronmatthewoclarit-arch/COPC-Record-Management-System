@@ -49,12 +49,12 @@ import NewRequestModal from "./NewRequestModal";
 
         <section className="card table-card">
           <div className="document-toolbar">
-            <div className="search">
+            <div className="search representative-search">
               <UiIcon name="search" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search Requests..."
+                placeholder="Search request"
                 aria-label="Search requests"
               />
             </div>

@@ -22,12 +22,12 @@ const deanNav = [
 ];
 
 const facultyNav = [
-  { id: "documents", label: "Program Documents", icon: "file" },
+  { id: "documents", label: "Documents", icon: "file" },
   { id: "settings", label: "Settings", icon: "settings" },
 ];
 
 const officeRepNav = [
-  { id: "documents", label: "Program Documents", icon: "file" },
+  { id: "documents", label: "Documents", icon: "file" },
   { id: "settings", label: "Settings", icon: "settings" },
 ];
 
@@ -72,7 +72,6 @@ export function Sidebar({ page, setPage, role }) {
                 <UiIcon name={n.icon} />
               </i>
               {n.label}
-              {n.id === "requests" && <em>0</em>}
             </button>
           );
         })}

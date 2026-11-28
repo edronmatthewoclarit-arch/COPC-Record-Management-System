@@ -34,11 +34,12 @@ export function NotificationsPage({ notices, markAll, openNotice }) {
       <section className="card notifications-page">
         <div className="notification-tools">
           <div className="search">
-            ⌕{" "}
+            <UiIcon name="search" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               aria-label="Search notifications"
+              placeholder="Search notifications..."
             />
           </div>
 

@@ -295,6 +295,7 @@ export function NewRequestModal({
                 value={facultySearch}
                 onChange={(e) => setFacultySearch(e.target.value)}
                 aria-label="Search faculty records"
+                placeholder="Search faculty records..."
               />
             </div>
 

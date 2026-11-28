@@ -119,7 +119,6 @@ export function Requirements({
         >
           <div>
             <strong>{completionPercentage}%</strong>
-            <span>Completed</span>
           </div>
         </div>
         {[
@@ -138,25 +137,18 @@ export function Requirements({
       </section>
 
       <section className="card table-card program-overview-table">
-        <div className="requirements-table-toolbar">
-          <div className="requirements-toolbar-title">
-            <b>Program Requirements</b>
-            <span>
-              Showing {filtered.length} of {initialRequirements.length}{" "}
-              requirements
-            </span>
+        <div className="representative-toolbar">
+          <div className="search representative-search" style={{ maxWidth: "360px" }}>
+            <UiIcon name="search" />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              aria-label="Search requirements"
+              placeholder="Search requirements"
+            />
           </div>
 
           <div className="requirements-actions">
-            <div className="search">
-              <UiIcon name="search" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                aria-label="Search requirements"
-              />
-            </div>
-
             <div className="filter-wrap">
               <button
                 className={`btn filter-button ${filters.length ? "has-filters" : ""}`}
@@ -206,10 +198,7 @@ export function Requirements({
                   </div>
 
                   <div className="filter-actions">
-                    <button
-                      className="btn secondary"
-                      onClick={() => setDraft([])}
-                    >
+                    <button className="btn secondary" onClick={() => setDraft([])}>
                       Clear Filters
                     </button>
                     <button

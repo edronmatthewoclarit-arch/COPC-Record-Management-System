@@ -96,6 +96,7 @@ export function RequirementDetails({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 aria-label="Search records"
+                placeholder="Search records..."
               />
             </div>
 
